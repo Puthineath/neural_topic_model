@@ -82,14 +82,15 @@ def get_top_concept(results):
 #
 #     return narrow_results_list
 
-def get_narrow(top_concept):
+def get_narrow(top_concept, path_list):
     # query definition, label, narrower concept
     narrow_results = get_results(endpoint_url, query_def, concept=top_concept)
     narrow_results_list = [narrow_result for narrow_result in narrow_results["results"]["bindings"]]
     for elt in narrow_results_list:
+        new_path_list = path_list.append(elt)
         # print(elt)
         # get only URI to continue querying
-        get_narrow(elt['child_id']['value'])
+        get_narrow(elt['child_id']['value'], new_path_list)
 
     return narrow_results_list
 
@@ -108,7 +109,7 @@ def main():
     top_concepts = get_top_concept(results)
     pprint(top_concepts)
     # get all the information such as Label, Concept, Definition from recursion function
-    lists = [get_narrow(top_concept) for top_concept in top_concepts]
+    lists = [get_narrow(top_concept, path_list=[top_concept]) for top_concept in top_concepts]
     # get each dictionary from the list for pushing to MongoDB
     for i in lists:
         for j in i:
