@@ -22,9 +22,9 @@ query_narrow = """
                     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
                     SELECT ?child
-                    FROM <http://www.data.com/3>
+                    FROM <#scheme>
                     WHERE {
-                        <%(concept)> skos:narrower ?child  .
+                        <#concept> skos:narrower ?child  .
                     }
                 """
 
@@ -44,7 +44,7 @@ def get_top_concept(results):
 
 
 def get_narrow(concept):
-    narrow_results = get_results(endpoint_url, query_narrow, concept=concept)
+    narrow_results = get_results(endpoint_url, " ".join(query_narrow.split()), concept=concept)
     narrow_results_list = [narrow_result['child']['value'] for narrow_result in narrow_results["results"]["bindings"]]
     for elt in narrow_results_list:
         print(elt)
