@@ -28,6 +28,31 @@ query_narrow = """
                     }
                 """
 
+data_query = """
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            PREFIX euvoc: <http://publications.europa.eu/ontology/euvoc#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+            SELECT ?prefLabel ?altLabel ?definition 
+            FROM <#scheme>
+            WHERE {
+                optional {
+                    <#concept> skos:altLabel ?altLabel .
+                    filter (lang(?altLabel) = "en") 
+                }
+                
+                optional { 
+                    <#concept> euvoc:xlDefinition ?def .
+                    ?definition rdf:value ?definition.
+                    filter (lang(?definition) = "en") 
+                }    
+                optional {
+                    <#concept> skos:prefLabel ?prefLabel .
+                    filter (lang(?prefLabel) = "en") 
+                }
+            }
+        """
+
 
 def get_results(endpoint, query, concept=""):
     sparql = SPARQLWrapper(endpoint)
@@ -44,10 +69,26 @@ def get_top_concept(results):
 
 
 def get_narrow(concept):
+    # Retrieve the information about the concept
+    data_results = get_results(endpoint_url, " ".join(data_query.split()), concept=concept)
+    pref_label = data_results['results']['bindings'][0]['prefLabel']['value']
+    if 'altLabel' in data_results['results']['bindings'][0]:
+        alt_label = data_results['results']['bindings'][0]['altLabel']['value']
+    else:
+        alt_label = ""
+    if 'definition' in data_results['results']['bindings'][0]:
+        definition = data_results['results']['bindings'][0]['definition']['value']
+    else:
+        definition = ""
+
+    # Push the data to MongoDB
+    print("p")
+    # Retrieve the narrower concepts if any
     narrow_results = get_results(endpoint_url, " ".join(query_narrow.split()), concept=concept)
+
+
     narrow_results_list = [narrow_result['child']['value'] for narrow_result in narrow_results["results"]["bindings"]]
     for elt in narrow_results_list:
-        print(elt)
         get_narrow(elt)
     return narrow_results_list
 
