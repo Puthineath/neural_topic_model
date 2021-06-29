@@ -29,11 +29,8 @@ query_narrow = """
                 """
 
 
-def get_results(endpoint_url, query, concept=""):
-    user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
-    # TODO adjust user agent; see https://w.wiki/CX6
-    sparql = SPARQLWrapper(endpoint_url, agent=user_agent)
-    # sparql.setQuery(query)
+def get_results(endpoint, query, concept=""):
+    sparql = SPARQLWrapper(endpoint)
     sparql.setQuery(query % {'concept': str(concept)})
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
@@ -44,8 +41,8 @@ def get_top_concept(results):
     return top_concept
 
 
-def get_narrow(top_concept):
-    narrow_results = get_results(endpoint_url, query_narrow, concept=top_concept)
+def get_narrow(concept):
+    narrow_results = get_results(endpoint_url, query_narrow, concept=concept)
     narrow_results_list = [narrow_result['child']['value'] for narrow_result in narrow_results["results"]["bindings"]]
     for elt in narrow_results_list:
         print(elt)
@@ -55,7 +52,7 @@ def get_narrow(top_concept):
 
 def main():
     print("------------Get the top concepts------------------")
-    results = get_results(endpoint_url, query2, concept="?concept")
+    results = get_results(endpoint_url," ".join(query2.split()), concept="?concept")
     top_concepts = get_top_concept(results)
     # pprint(top_concepts)
     print("------------Get narrower concepts------------------")
