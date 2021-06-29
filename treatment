@@ -4,15 +4,16 @@ from pprint import pprint
 
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
+concept_scheme = "http://eurovoc.europa.eu/100141"
+
 # get the top concept
-query2 = """
+query_top_concept = """
             PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-            SELECT ?concept
-            FROM <http://www.data.com/3>
+            SELECT #concept
+            FROM <#scheme>
             WHERE {
-                ?concept skos:topConceptOf ?conceptScheme  .
+                #concept skos:topConceptOf <#scheme>  .
             }
-            # LIMIT 5
         """
 # get narrower concept
 query_narrow = """
@@ -23,15 +24,16 @@ query_narrow = """
                     SELECT ?child
                     FROM <http://www.data.com/3>
                     WHERE {
-                        <%(concept)s> skos:narrower ?child  .
+                        <%(concept)> skos:narrower ?child  .
                     }
-                    # LIMIT 5
                 """
 
 
 def get_results(endpoint, query, concept=""):
     sparql = SPARQLWrapper(endpoint)
-    sparql.setQuery(query % {'concept': str(concept)})
+    tmp_query = query.replace("#concept", concept)
+    tmp_query = tmp_query.replace("#scheme", concept_scheme)
+    sparql.setQuery(tmp_query)
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
@@ -52,7 +54,7 @@ def get_narrow(concept):
 
 def main():
     print("------------Get the top concepts------------------")
-    results = get_results(endpoint_url," ".join(query2.split()), concept="?concept")
+    results = get_results(endpoint_url," ".join(query_top_concept.split()), concept="?concept")
     top_concepts = get_top_concept(results)
     # pprint(top_concepts)
     print("------------Get narrower concepts------------------")
