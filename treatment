@@ -2,6 +2,9 @@ import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
 from pprint import pprint
 
+from pymongo import MongoClient
+from random import randint
+
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
 concept_scheme = "http://eurovoc.europa.eu/100141"
@@ -68,6 +71,21 @@ def get_top_concept(results):
     return top_concept
 
 
+def push_mongo_db(uri, pref_label, alt_label, definition):
+    myclient = MongoClient("mongodb://82.165.108.31:8081/db")
+    db = myclient["Test"]
+    collection = db["test"]
+    # insert only 1, so delete the one in db whenever insert the new one
+    item_1 = {
+        "_id": uri,
+        "pref_label": pref_label,
+        "alt_label": alt_label,
+        "definition": definition
+    }
+    collection.insert_many(item_1)
+    return
+
+
 def get_narrow(concept):
     # Retrieve the information about the concept
     data_results = get_results(endpoint_url, " ".join(data_query.split()), concept=concept)
@@ -82,11 +100,10 @@ def get_narrow(concept):
         definition = ""
 
     # Push the data to MongoDB
-    print("p")
+    push_mongo_db(pref_label, alt_label, definition)
+
     # Retrieve the narrower concepts if any
     narrow_results = get_results(endpoint_url, " ".join(query_narrow.split()), concept=concept)
-
-
     narrow_results_list = [narrow_result['child']['value'] for narrow_result in narrow_results["results"]["bindings"]]
     for elt in narrow_results_list:
         get_narrow(elt)
