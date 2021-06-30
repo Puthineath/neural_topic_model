@@ -1,13 +1,16 @@
 import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
 from pprint import pprint
-
 from pymongo import MongoClient
+import spacy
+
 from random import randint
 
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
 concept_scheme = "http://eurovoc.europa.eu/100141"
+
+nlp = spacy.load('en_core_web_sm')
 
 # get the top concept
 query_top_concept = """
@@ -86,7 +89,20 @@ def push_mongo_db(uri, pref_label, alt_label, definition):
     return
 
 
+def pre_processing(texts):
+    # remove stop words
+    sw_spacy = nlp.Defaults.stop_words
+    words = [word for word in texts.split() if word.lower() not in sw_spacy]
+    new_text = " ".join(words)
+    # get keywords
+    doc = nlp(new_text)
+    # need to convert to string, not list
+    a = [chunk.text for chunk in doc.noun_chunks]
+    return a
+
+
 def get_narrow(concept):
+
     # Retrieve the information about the concept
     data_results = get_results(endpoint_url, " ".join(data_query.split()), concept=concept)
     pref_label = data_results['results']['bindings'][0]['prefLabel']['value']
@@ -96,6 +112,7 @@ def get_narrow(concept):
         alt_label = ""
     if 'definition' in data_results['results']['bindings'][0]:
         definition = data_results['results']['bindings'][0]['definition']['value']
+        #pre_processing(definition)
     else:
         definition = ""
 
