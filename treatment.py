@@ -1,8 +1,11 @@
 import sys
+from urllib.error import HTTPError
+
 from SPARQLWrapper import SPARQLWrapper, JSON
 from pprint import pprint
 from pymongo import MongoClient
 import spacy
+import time
 
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
@@ -59,7 +62,8 @@ data_query = """
 
 
 def get_results(endpoint, query, concept=""):
-    sparql = SPARQLWrapper(endpoint)
+    user_agent = "WDQS-example Python/%s.%s" % (sys.version_info[0], sys.version_info[1])
+    sparql = SPARQLWrapper(endpoint, agent=user_agent)
     tmp_query = query.replace("#concept", concept)
     tmp_query = tmp_query.replace("#scheme", concept_scheme)
     sparql.setQuery(tmp_query)
@@ -76,29 +80,42 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
     myclient = MongoClient("mongodb://localhost:27017")
     db = myclient["Eurovoc"]
     collection = db["data_eu"]
-    # collection.update_one({"_id": uri},upsert=False)
-    if collection.find_one({"_id": uri}):
-        # delete and replace the duplicated id
-        collection.delete_one({"_id": uri})
-        item_1 = {
-            "_id": uri,
-            "pref_label": pref_label,
-            "alt_label": alt_label,
-            "definition": definition,
-            "path": path
-        }
-        collection.insert_many([item_1])
-        # print("replace")
-    else:
-        item_1 = {
-            "_id": uri,
-            "pref_label": pref_label,
-            "alt_label": alt_label,
 
-            "definition": definition,
-            "path": path
-        }
-        collection.insert_many([item_1])
+    try:
+
+        if collection.find_one({"_id": uri}):
+            # delete and replace the duplicated id
+            collection.delete_one({"_id": uri})
+            item_1 = {
+                "_id": uri,
+                "pref_label": pref_label,
+                "alt_label": alt_label,
+                "definition": definition,
+                "path": path
+            }
+            # insert data to MongoDB
+            collection.insert_many([item_1])
+            #count the number in database to sleep 5 seconds every 100 entries of documents
+            if collection.count_documents({}) % 100 == 0:
+                print(f"insert{collection.count_documents({})}")
+                time.sleep(60)
+        else:
+            item_1 = {
+                "_id": uri,
+                "pref_label": pref_label,
+                "alt_label": alt_label,
+                "definition": definition,
+                "path": path
+            }
+            collection.insert_many([item_1])
+            # for i in range(collection.count_documents({})):
+            if collection.count_documents({}) % 100 == 0:
+                print(f"insert{collection.count_documents({})}")
+                time.sleep(60)
+
+    except HTTPError as e:
+        print(e)
+
         # print("inserted new")
 
     return
@@ -136,12 +153,11 @@ def get_narrow(concept, path):
     push_mongo_db(concept, pref_label, alt_label, definition, path)
     # check if the id  existed, need to update to latest one
 
-
     # Retrieve the narrower concepts if any
     narrow_results = get_results(endpoint_url, " ".join(query_narrow.split()), concept=concept)
     narrow_results_list = [narrow_result['child']['value'] for narrow_result in narrow_results["results"]["bindings"]]
     for elt in narrow_results_list:
-        get_narrow(elt,path)
+        get_narrow(elt, path)
     return narrow_results_list
 
 
