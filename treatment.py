@@ -9,9 +9,10 @@ from pymongo import MongoClient
 import spacy
 import time
 
-endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
-
+#endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
+endpoint_url = "http://localhost:3030/eurovoc-load/query"
 concept_scheme = "http://eurovoc.europa.eu/100141"
+
 
 nlp = spacy.load('en_core_web_sm')
 
@@ -37,30 +38,45 @@ query_narrow = """
                     }
                 """
 
-data_query = """
+preflabel_query = """
             PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
             PREFIX euvoc: <http://publications.europa.eu/ontology/euvoc#>
             PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-            SELECT ?prefLabel ?altLabel ?definition 
+            SELECT ?prefLabel 
             FROM <#scheme>
             WHERE {
-                optional {
-                    <#concept> skos:altLabel ?altLabel .
-                    filter (lang(?altLabel) = "en") 
-                }
-
-                optional { 
-                    <#concept> euvoc:xlDefinition ?definition .
-                    ?definition rdf:value ?definition.
-                    filter (lang(?definition) = "en") 
-                }    
-                optional {
                     <#concept> skos:prefLabel ?prefLabel .
                     filter (lang(?prefLabel) = "en") 
-                }
             }
         """
+
+altLabel_query = """
+        PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            PREFIX euvoc: <http://publications.europa.eu/ontology/euvoc#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+            SELECT ?altLabel  
+            FROM <#scheme>
+            WHERE {
+                    <#concept> skos:altLabel ?altLabel .
+                    filter (lang(?altLabel) = "en")   
+            }
+"""
+
+definition_query = """
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            PREFIX euvoc: <http://publications.europa.eu/ontology/euvoc#>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+            SELECT ?definition  
+            FROM <#scheme>
+            WHERE {
+                    <#concept> euvoc:xlDefinition ?def .
+                    ?def rdf:value ?definition.
+                    filter (lang(?definition) = "en")  
+            }
+"""
 
 
 def get_results(endpoint, query, concept=""):
@@ -80,7 +96,7 @@ def get_top_concept(results):
 
 def push_mongo_db(uri, pref_label, alt_label, definition, path):
     myclient = MongoClient("mongodb://localhost:27017")
-    db = myclient["Eurovoc"]
+    db = myclient["Eurovoc2"]
     collection = db["data_eu"]
 
     try:
@@ -99,7 +115,6 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
             # count the number in database to sleep 60 seconds every 100 entries of documents
             if collection.count_documents({}) % 100 == 0:
                 print(f"insert{collection.count_documents({})}")
-                time.sleep(60)
         else:
             item_1 = {
                 "_id": uri,
@@ -112,7 +127,6 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
             # count the number in database to sleep 60 seconds every 100 entries of documents
             if collection.count_documents({}) % 100 == 0:
                 print(f"insert{collection.count_documents({})}")
-                time.sleep(60)
 
     except HTTPError as e:
         print(e)
@@ -134,7 +148,7 @@ def pre_processing(texts):
 
 def get_narrow(concept, path):
     # Retrieve the information about the concept
-    data_results = get_results(endpoint_url, " ".join(data_query.split()), concept=concept)
+    data_results = get_results(endpoint_url, " ".join(preflabel_query.split()), concept=concept)
     pref_label = data_results['results']['bindings'][0]['prefLabel']['value']
     path = path + "," + "<" + concept + ">"
     if 'altLabel' in data_results['results']['bindings'][0]:
