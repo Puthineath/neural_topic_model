@@ -1,3 +1,5 @@
+# Get the labels and push to MongoDB
+
 import sys
 from urllib.error import HTTPError
 
@@ -98,7 +100,6 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
     collection = db["data_eu"]
 
     try:
-
         if collection.find_one({"_id": uri}):
             # delete and replace the duplicated id
             collection.delete_one({"_id": uri})
@@ -111,7 +112,7 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
             }
             # insert data to MongoDB
             collection.insert_many([item_1])
-            #count the number in database to sleep 5 seconds every 100 entries of documents
+            # count the number in database to sleep 60 seconds every 100 entries of documents
             if collection.count_documents({}) % 100 == 0:
                 print(f"insert{collection.count_documents({})}")
         else:
@@ -123,14 +124,12 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
                 "path": path
             }
             collection.insert_many([item_1])
-            # for i in range(collection.count_documents({})):
+            # count the number in database to sleep 60 seconds every 100 entries of documents
             if collection.count_documents({}) % 100 == 0:
                 print(f"insert{collection.count_documents({})}")
 
     except HTTPError as e:
         print(e)
-
-        # print("inserted new")
 
     return
 
@@ -165,7 +164,6 @@ def get_narrow(concept, path):
 
     # Push the data to MongoDB
     push_mongo_db(concept, pref_label, alt_label, definition, path)
-    # check if the id  existed, need to update to latest one
 
     # Retrieve the narrower concepts if any
     narrow_results = get_results(endpoint_url, " ".join(query_narrow.split()), concept=concept)
@@ -184,8 +182,9 @@ def main():
     print(len(top_concepts))
     print("------------Get narrower concepts------------------")
     lis = [get_narrow(top_concept, "<" + concept_scheme + ">") for top_concept in top_concepts]
+
     return
 
 
 if __name__ == '__main__':
-    pprint(main())
+    print(main())
