@@ -1,3 +1,7 @@
+# This script retrieve the legal document and their metadata based on a specific Tag list
+#
+#
+
 import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
 from pprint import pprint
@@ -5,7 +9,7 @@ from pymongo import MongoClient
 import spacy
 
 
-tag_list = []
+tag_list = ["social policy"]
 
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
@@ -13,7 +17,24 @@ concept_scheme = "http://eurovoc.europa.eu/100141"
 
 nlp = spacy.load('en_core_web_sm')
 
+# Query to retrieve the concept with the prefLabel from the tag_list
+query_tag_to_concept = """ 
+            Prefix cdm: <http://publications.europa.eu/ontology/cdm#>
+            Prefix skos: <http://www.w3.org/2004/02/skos/core#>
+            Prefix skosxl: <http://www.w3.org/2008/05/skos-xl#>
+            
+            select ?c  where { 
+            
+            ?c a skos:Concept.
+            ?c skosxl:prefLabel ?lab .
+            ?lab skosxl:literalForm ?value.
+            filter(lang(?value) = "en").
+            FILTER regex(?value, ".*#word.*", "i")
+            }
+
+"""
 # query to retrieve an Eurlex document based on its Celex number
+
 
 query_based_on_celex = """
 
@@ -103,20 +124,27 @@ data_query = """
         """
 
 
-def get_results(endpoint, query, concept=""):
+def get_results(endpoint, query):
     sparql = SPARQLWrapper(endpoint)
-    tmp_query = query.replace("#concept", concept)
-    tmp_query = tmp_query.replace("#scheme", concept_scheme)
-    sparql.setQuery(tmp_query)
+    sparql.setQuery(query)
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-def get_results_query_document_tags(endpoint):
-    "?s cdm: work_is_about_concept_eurovoc ?eurovoc_uri.
-    return assertion
-def retrieve_document():
+# def get_results_query_document_tags(endpoint):
+#     "?s cdm: work_is_about_concept_eurovoc ?eurovoc_uri.
+#     return assertion
 
-    document_list = get_results_query_document_tags(endpoint_url)
+
+def retrieve_concept_uri():
+    for elt in tag_list:
+        new_query = query_tag_to_concept.replace("#word", elt)
+        get_results()
+    return
+
+
+def retrieve_document():
+    concept_list = retrieve_concept_uri()
+    #document_list = get_results_query_document_tags(endpoint_url, new_query)
     return document_list
 
 

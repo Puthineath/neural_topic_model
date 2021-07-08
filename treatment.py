@@ -167,8 +167,10 @@ def main():
     pprint(top_concepts)
     print(len(top_concepts))
     print("------------Get narrower concepts------------------")
-
     lis = [get_narrow(top_concept, "<" + concept_scheme + ">") for top_concept in top_concepts]
+
+    return
+
 
 if __name__ == '__main__':
     print(main())
