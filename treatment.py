@@ -1,5 +1,5 @@
 # Get the labels and push to MongoDB
-
+import json
 import sys
 from urllib.error import HTTPError
 
@@ -96,13 +96,14 @@ def get_top_concept(results):
 
 def push_mongo_db(uri, pref_label, alt_label, definition, path):
     myclient = MongoClient("mongodb://localhost:27017")
-    db = myclient["Eurovoc2"]
+    db = myclient["Eurovoc"]
     collection = db["data_eu"]
 
     try:
         if collection.find_one({"_id": uri}):
             # delete and replace the duplicated id
             collection.delete_one({"_id": uri})
+
             item_1 = {
                 "_id": uri,
                 "pref_label": pref_label,
@@ -112,9 +113,6 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
             }
             # insert data to MongoDB
             collection.insert_many([item_1])
-            # count the number in database to sleep 60 seconds every 100 entries of documents
-            if collection.count_documents({}) % 100 == 0:
-                print(f"insert{collection.count_documents({})}")
         else:
             item_1 = {
                 "_id": uri,
@@ -124,9 +122,9 @@ def push_mongo_db(uri, pref_label, alt_label, definition, path):
                 "path": path
             }
             collection.insert_many([item_1])
-            # count the number in database to sleep 60 seconds every 100 entries of documents
-            if collection.count_documents({}) % 100 == 0:
-                print(f"insert{collection.count_documents({})}")
+        # count the number in database to sleep 60 seconds every 100 entries of documents
+        if collection.count_documents({}) % 100 == 0:
+            print(f"insert{collection.count_documents({})}")
 
     except HTTPError as e:
         print(e)
@@ -151,16 +149,19 @@ def get_narrow(concept, path):
     data_results = get_results(endpoint_url, " ".join(preflabel_query.split()), concept=concept)
     pref_label = data_results['results']['bindings'][0]['prefLabel']['value']
     path = path + "," + "<" + concept + ">"
-    if 'altLabel' in data_results['results']['bindings'][0]:
-        alt_label = data_results['results']['bindings'][0]['altLabel']['value']
-    else:
-        alt_label = ""
-    if 'definition' in data_results['results']['bindings'][0]:
-        definition = data_results['results']['bindings'][0]['definition']['value']
-        def_wording = pre_processing(definition)
-        definition = def_wording
-    else:
-        definition = ""
+
+    data_results = get_results(endpoint_url, " ".join(altLabel_query.split()), concept=concept)
+    alt_label = []
+    for alt in data_results['results']['bindings']:
+        alt_label.append(alt['altLabel']['value'])
+
+    data_results = get_results(endpoint_url, " ".join(definition_query.split()), concept=concept)
+    definition = ""
+    if len(data_results['results']['bindings']) > 0:
+        if 'definition' in data_results['results']['bindings'][0]:
+            definition = data_results['results']['bindings'][0]['definition']['value']
+            def_wording = pre_processing(definition)
+            definition = def_wording
 
     # Push the data to MongoDB
     push_mongo_db(concept, pref_label, alt_label, definition, path)
