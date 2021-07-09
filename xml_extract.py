@@ -1,20 +1,15 @@
-# Extract data from XML files
-
+# extract data from XML files
 import csv
 import glob
-import os
 from bs4 import BeautifulSoup as bs
 import spacy
+from pymongo import MongoClient
 from pprint import pprint
 
 nlp = spacy.load('en_core_web_sm')
 content = []
 result_list = []
-
-# list of data folders
 folders = ["CELEX - 32017R1004", "CELEX - 32019R0833", "CELEX - 32013R1303", "CELEX - 32019R0473"]
-
-# list of unimportant tags
 tag_names = ["ti.art", "title", "sti.art"]
 
 # ***** need to extract the labels from MongoDB
@@ -70,7 +65,43 @@ def get_data(file):
         # clean the texts
         for key, value in data.items():
             data[key] = pre_processing(value)
+
+        # add label
+        data['label'] = get_data_mongo()
         return data
+
+# Get the URI from the "theme.csv" file
+def read_theme_file(folder):
+    list_uri = []
+    with open('data/' + folder +'/theme.csv', 'r') as file:
+    # with open('data/CELEX - 32017R1004/theme.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            list_uri.append(row)
+            # print(row)
+    del list_uri[0]
+    return list_uri
+
+# Get the label from the MongoDB
+def get_data_mongo():
+    label_list = []
+    myclient = MongoClient("mongodb://localhost:27017")
+    db = myclient["Eurovoc"]
+    collection = db["data_eu"]
+    try:
+        for folder in folders:
+            for i in read_theme_file(folder):
+                for uri in i:
+                    # label_list.append(collection.find_one({"_id": uri}, {"path":0, "_id":0,"pref_label":1,"alt_label":1,"definition":1}))
+                    # label_list.append(collection.find_one({"_id": uri},{"path":0,"_id":0}))
+
+                    # Get only the 'labels', not URI or path
+                    for key,value in collection.find_one({"_id": uri},{"path":0,"_id":0}).items():
+                        label_list.append(value)
+                        # label_list.append("".join(value))
+    except:
+        pass
+    return label_list
 
 
 def main():
@@ -81,7 +112,7 @@ def main():
         result_list.append(get_data("data/" + folder + "/concat.xml"))
 
     # save to csv file
-    csv_columns = ['title', 'article']
+    csv_columns = ['title', 'article','label']
     csv_file = "data/data1.csv"
     try:
         with open(csv_file, 'w') as csvfile:
@@ -89,9 +120,14 @@ def main():
             writer.writeheader()
             for data in result_list:
                 writer.writerow(data)
-    except IOError:
-        print("I/O error")
+    except IOError as e:
+        print(e)
 
 
 if __name__ == '__main__':
+    # ***** need to get the label one by one title because current code merges all the label in one
+    # ***** need to get convert some labels in the list into the string
     main()
+    # pprint(get_data_mongo())
+    # print(read_theme_file(folders[0]))
+    # print(get_data("data/CELEX - 32017R1004/concat.xml"))
