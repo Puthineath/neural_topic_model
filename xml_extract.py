@@ -20,8 +20,8 @@ def pre_processing(texts):
     # get keywords
     doc = nlp(new_text)
     a = [chunk.text for chunk in doc.noun_chunks]
-    # need to remove the word "article" + number and remove word annex
-    # need to remove punctutation
+    # ***** need to remove the word "article" + number and remove word annex
+    # ***** need to remove punctutation
     return " ".join(a)
 
 # merge xml files
@@ -35,7 +35,7 @@ def merge_files(folder):
                 outfile.write(infile.read())
     return
 
-# get title, article, and labels
+# get titles, articles, and labels
 def get_data(folder):
     data = {}
     with open("data/" + folder + "/concat.xml", "r", encoding="utf-8") as xml_file:
@@ -65,7 +65,10 @@ def get_data(folder):
             data[key] = pre_processing(value)
 
         # add label
-        data['label'] = get_data_mongo(folder)
+        # ** data['label'] = get_data_mongo(folder)
+
+        # get only one label for testing
+        data['label'] = get_data_mongo(folder)[0]
 
         return data
 
@@ -117,6 +120,7 @@ def main():
     # save to csv file
     csv_columns = ['title', 'article', 'label']
     csv_file = "data/data1.csv"
+    # csv_file = "data/data_prefLabel.csv"
     try:
         with open(csv_file, 'w') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
@@ -125,7 +129,6 @@ def main():
                 writer.writerow(data)
     except IOError as e:
         print(e)
-
 
 if __name__ == '__main__':
     main()
