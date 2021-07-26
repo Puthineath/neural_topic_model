@@ -1,5 +1,5 @@
 # This script retrieve the legal document and their metadata based on a specific Tag list
-#
+# @param : tag_list & num_of_file
 #
 
 import sys
@@ -9,13 +9,15 @@ from pymongo import MongoClient
 import spacy
 
 
-tag_list = ["social policy"]
+tag_list = ["social policy", "fishery"]
+
+num_of_file = 20
 
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
 concept_scheme = "http://eurovoc.europa.eu/100141"
 
-nlp = spacy.load('en_core_web_sm')
+#nlp = spacy.load('en_core_web_sm')
 
 # Query to retrieve the concept with the prefLabel from the tag_list
 query_tag_to_concept = """ 
@@ -23,7 +25,7 @@ query_tag_to_concept = """
             Prefix skos: <http://www.w3.org/2004/02/skos/core#>
             Prefix skosxl: <http://www.w3.org/2008/05/skos-xl#>
             
-            select ?c  where { 
+            select ?c  from <#ConceptScheme> where  { 
             
             ?c a skos:Concept.
             ?c skosxl:prefLabel ?lab .
@@ -136,24 +138,29 @@ def get_results(endpoint, query):
 
 
 def retrieve_concept_uri():
+    concept_uris = []
     for elt in tag_list:
         new_query = query_tag_to_concept.replace("#word", elt)
-        get_results()
-    return
+        new_query = new_query.replace("#ConceptScheme", concept_scheme)
+        lst = get_results(endpoint_url, new_query)
+        for elt in lst['results']['bindings']:
+            concept_uris.append(elt['c']['value'])
+    return concept_uris
 
 
 def retrieve_document():
     concept_list = retrieve_concept_uri()
     #document_list = get_results_query_document_tags(endpoint_url, new_query)
-    return document_list
+    #return document_list
+    return concept_list
 
 
 def main():
     print("------------Get the XML document------------------")
-    document_list = retrieve_document( )
+    document_list = retrieve_document()
 
     return
 
 
 if __name__ == '__main__':
-    pprint(main())
+    main()
