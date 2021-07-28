@@ -67,18 +67,20 @@ select ?eurovoc_uri  where {
 
 }  """
 
-# Query to retrieve an EurLex document based on the Eurovoc tag
+# Query to retrieve an EurLex document based on the E
+query_doc_from_celex = """
+        prefix cdm: < http: // publications.europa.eu / ontology / cdm  # >
 
-
-query_top_concept = """
-            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-            SELECT #concept
-            FROM <#scheme>
-            WHERE {
-                #concept skos:topConceptOf <#scheme>  .
-            }
-        """
-
+        select * where {
+        #?s cdm:work_id_document "celex:32015R1929"^^<http://www.w3.org/2001/XMLSchema#string> .
+        ?s cdm:work_id_document "#celex"^^<http://www.w3.org/2001/XMLSchema#string> .
+        ?s ^cdm:expression_belongs_to_work ?expression.
+        ?expression cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG>.
+        ?expression ^ cdm: manifestation_manifests_expression ?manifestation.
+        ?manifestation ^ cdm: item_belongs_to_manifestation ?item.
+        ?manifestation cdm:manifestation_type ?manifestationtype.
+        filter(str(?manifestationtype) ='fmx4')
+        } limit 100         """
 
 def get_results(endpoint, query):
     sparql = SPARQLWrapper(endpoint)
@@ -88,10 +90,13 @@ def get_results(endpoint, query):
 
 
 def get_results_query_document_tags(endpoint, concept):
-    assertion = "?s cdm: work_is_about_concept_eurovoc #eurovoc_uri . "
+    assertion = "?s cdm:work_is_about_concept_eurovoc <#eurovoc_uri> . "
     global_assert = assertion.replace("#eurovoc_uri", concept)
-    new_query = ""
-    get_results(endpoint_url, new_query)
+    new_query = query_based_on_tag.replace("#assertion", global_assert)
+    result_list = get_results(endpoint_url, new_query)
+    for doc in result_list['results']['bindings']:
+        new_query = query_doc_from_celex.replace("#celex", doc['celex_id']['value'])
+        print(new_query)
     return assertion
 
 
