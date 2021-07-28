@@ -9,15 +9,13 @@ from pymongo import MongoClient
 import spacy
 
 
-tag_list = ["social policy", "fishery"]
+tag_list = ["fishery"]
 
 num_of_file = 20
 
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
 concept_scheme = "http://eurovoc.europa.eu/100141"
-
-#nlp = spacy.load('en_core_web_sm')
 
 # Query to retrieve the concept with the prefLabel from the tag_list
 query_tag_to_concept = """ 
@@ -31,15 +29,8 @@ query_tag_to_concept = """
             ?c skosxl:prefLabel ?lab .
             ?lab skosxl:literalForm ?value.
             filter(lang(?value) = "en").
-            FILTER regex(?value, ".*#word.*", "i")
+            FILTER regex(?value, "#word", "i")
             }
-
-"""
-# query to retrieve an Eurlex document based on its Celex number
-
-
-query_based_on_celex = """
-
 
 """
 
@@ -87,43 +78,6 @@ query_top_concept = """
                 #concept skos:topConceptOf <#scheme>  .
             }
         """
-# get narrower concept
-query_narrow = """
-                    PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-                    PREFIX euvoc: <http://publications.europa.eu/ontology/euvoc#>
-                    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-                    SELECT ?child
-                    FROM <#scheme>
-                    WHERE {
-                        <#concept> skos:narrower ?child  .
-                    }
-                """
-
-data_query = """
-            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-            PREFIX euvoc: <http://publications.europa.eu/ontology/euvoc#>
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-            SELECT ?prefLabel ?altLabel ?definition 
-            FROM <#scheme>
-            WHERE {
-                optional {
-                    <#concept> skos:altLabel ?altLabel .
-                    filter (lang(?altLabel) = "en") 
-                }
-
-                optional { 
-                    <#concept> euvoc:xlDefinition ?def .
-                    ?definition rdf:value ?definition.
-                    filter (lang(?definition) = "en") 
-                }    
-                optional {
-                    <#concept> skos:prefLabel ?prefLabel .
-                    filter (lang(?prefLabel) = "en") 
-                }
-            }
-        """
 
 
 def get_results(endpoint, query):
@@ -132,9 +86,13 @@ def get_results(endpoint, query):
     sparql.setReturnFormat(JSON)
     return sparql.query().convert()
 
-# def get_results_query_document_tags(endpoint):
-#     "?s cdm: work_is_about_concept_eurovoc ?eurovoc_uri.
-#     return assertion
+
+def get_results_query_document_tags(endpoint, concept):
+    assertion = "?s cdm: work_is_about_concept_eurovoc #eurovoc_uri . "
+    global_assert = assertion.replace("#eurovoc_uri", concept)
+    new_query = ""
+    get_results(endpoint_url, new_query)
+    return assertion
 
 
 def retrieve_concept_uri():
@@ -148,17 +106,19 @@ def retrieve_concept_uri():
     return concept_uris
 
 
-def retrieve_document():
-    concept_list = retrieve_concept_uri()
-    #document_list = get_results_query_document_tags(endpoint_url, new_query)
-    #return document_list
-    return concept_list
+def retrieve_document(concept_list):
+    document_list = []
+    for concept in concept_list:
+        document_list.append(get_results_query_document_tags(endpoint_url, concept))
+        if len(document_list) > num_of_file :
+            return document_list
+    return document_list
 
 
 def main():
     print("------------Get the XML document------------------")
-    document_list = retrieve_document()
-
+    concept_list = retrieve_concept_uri()
+    document_list = retrieve_document(concept_list)
     return
 
 
