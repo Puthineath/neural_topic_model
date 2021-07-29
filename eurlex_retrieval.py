@@ -4,6 +4,7 @@
 
 import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
+import requests
 from pprint import pprint
 from pymongo import MongoClient
 import spacy
@@ -69,15 +70,15 @@ select ?eurovoc_uri  where {
 
 # Query to retrieve an EurLex document based on the E
 query_doc_from_celex = """
-        prefix cdm: < http: // publications.europa.eu / ontology / cdm  # >
+        prefix cdm: <http://publications.europa.eu/ontology/cdm#>
 
         select * where {
         #?s cdm:work_id_document "celex:32015R1929"^^<http://www.w3.org/2001/XMLSchema#string> .
         ?s cdm:work_id_document "#celex"^^<http://www.w3.org/2001/XMLSchema#string> .
         ?s ^cdm:expression_belongs_to_work ?expression.
         ?expression cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG>.
-        ?expression ^ cdm: manifestation_manifests_expression ?manifestation.
-        ?manifestation ^ cdm: item_belongs_to_manifestation ?item.
+        ?expression ^ cdm:manifestation_manifests_expression ?manifestation.
+        ?manifestation ^ cdm:item_belongs_to_manifestation ?item.
         ?manifestation cdm:manifestation_type ?manifestationtype.
         filter(str(?manifestationtype) ='fmx4')
         } limit 100         """
@@ -90,14 +91,25 @@ def get_results(endpoint, query):
 
 
 def get_results_query_document_tags(endpoint, concept):
+    # Retrieve the documents based on the URI of the tag - rsults : list of celex and oj documents
     assertion = "?s cdm:work_is_about_concept_eurovoc <#eurovoc_uri> . "
     global_assert = assertion.replace("#eurovoc_uri", concept)
     new_query = query_based_on_tag.replace("#assertion", global_assert)
     result_list = get_results(endpoint_url, new_query)
+    # Extract the documents found from the Cellar
     for doc in result_list['results']['bindings']:
-        new_query = query_doc_from_celex.replace("#celex", doc['celex_id']['value'])
-        print(new_query)
+        if "celex:" in doc['celex_id']['value']:
+            new_query = query_doc_from_celex.replace("#celex", doc['celex_id']['value'])
+            doc_parts = get_results(endpoint_url, new_query)
+            for part in doc_parts['results']['bindings']:
+                r = requests.get(part['item']['value'])
+                push_to_mongodb("")
+            print(new_query)
     return assertion
+
+
+def push_to_mongodb(part):
+    return
 
 
 def retrieve_concept_uri():
