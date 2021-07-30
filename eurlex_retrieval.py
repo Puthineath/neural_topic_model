@@ -1,4 +1,4 @@
-# This script retrieve the legal document and their metadata based on a specific Tag list
+# This script retrieve the legal document from Eurlex and their metadata based on a specific Tag list
 # @param : tag_list & num_of_file
 #
 
@@ -7,6 +7,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 import requests
 from pprint import pprint
 from pymongo import MongoClient
+from urllib.error import HTTPError
 import spacy
 
 
@@ -68,12 +69,11 @@ select ?eurovoc_uri  where {
 
 }  """
 
-# Query to retrieve an EurLex document based on the E
+# Query to retrieve a specific EurLex document based on its Celex number
 query_doc_from_celex = """
         prefix cdm: <http://publications.europa.eu/ontology/cdm#>
 
         select * where {
-        #?s cdm:work_id_document "celex:32015R1929"^^<http://www.w3.org/2001/XMLSchema#string> .
         ?s cdm:work_id_document "#celex"^^<http://www.w3.org/2001/XMLSchema#string> .
         ?s ^cdm:expression_belongs_to_work ?expression.
         ?expression cdm:expression_uses_language <http://publications.europa.eu/resource/authority/language/ENG>.
@@ -81,7 +81,7 @@ query_doc_from_celex = """
         ?manifestation ^ cdm:item_belongs_to_manifestation ?item.
         ?manifestation cdm:manifestation_type ?manifestationtype.
         filter(str(?manifestationtype) ='fmx4')
-        } limit 100         """
+        }        """
 
 def get_results(endpoint, query):
     sparql = SPARQLWrapper(endpoint)
@@ -103,12 +103,41 @@ def get_results_query_document_tags(endpoint, concept):
             doc_parts = get_results(endpoint_url, new_query)
             for part in doc_parts['results']['bindings']:
                 r = requests.get(part['item']['value'])
-                push_to_mongodb("")
-            print(new_query)
+                push_mongo_db(doc['celex_id']['value'], r.text, part['item']['value'])
     return assertion
 
 
-def push_to_mongodb(part):
+def push_mongo_db(celex, data, file_uri):
+    myclient = MongoClient("mongodb://localhost:27017")
+    db = myclient["Documents"]
+    collection = db["documents"]
+
+    try:
+        if collection.find_one({"file_uri": file_uri}):
+            # delete and replace the duplicated id
+            collection.delete_one({"file_uri": file_uri})
+
+            item_1 = {
+                "celex": celex,
+                "data": data,
+                "file_uri": file_uri,
+            }
+            # insert data to MongoDB
+            collection.insert_many([item_1])
+        else:
+            item_1 = {
+                "celex": celex,
+                "data": data,
+                "file_uri": file_uri,
+            }
+            collection.insert_many([item_1])
+        # count the number in database to sleep 60 seconds every 100 entries of documents
+        if collection.count_documents({}) % 100 == 0:
+            print(f"insert{collection.count_documents({})}")
+
+    except HTTPError as e:
+        print(e)
+
     return
 
 
