@@ -1,6 +1,12 @@
 # This script retrieve the legal document from Eurlex and their metadata based on a specific Tag list
 # @param : tag_list & num_of_file
 #
+# The results of the script is a set of XML document (Formex) along with the URI of the concept of Eurovoc
+#
+#
+# The data are stored on a local MongoDb instance (the database info are set as parameters : mongo_db_database and mongo_db_collection)
+#
+
 
 import sys
 from SPARQLWrapper import SPARQLWrapper, JSON
@@ -10,14 +16,25 @@ from pymongo import MongoClient
 from urllib.error import HTTPError
 import spacy
 
-
+# Tag list used to select the related document
 tag_list = ["fishery"]
 
+# Number of the retrieved files (using the tag list)
 num_of_file = 20
 
+# Endpoint where the EurLex files are stored
 endpoint_url = "http://publications.europa.eu/webapi/rdf/sparql"
 
+# Concept scheme of Eurovoc
 concept_scheme = "http://eurovoc.europa.eu/100141"
+
+# MongoDb database
+mongo_db_database = "Documents"
+
+# MongoDb collection
+mongo_db_collection = "documents"
+
+counter = 0
 
 # Query to retrieve the concept with the prefLabel from the tag_list
 query_tag_to_concept = """ 
@@ -83,6 +100,7 @@ query_doc_from_celex = """
         filter(str(?manifestationtype) ='fmx4')
         }        """
 
+
 def get_results(endpoint, query):
     sparql = SPARQLWrapper(endpoint)
     sparql.setQuery(query)
@@ -97,21 +115,29 @@ def get_results_query_document_tags(endpoint, concept):
     new_query = query_based_on_tag.replace("#assertion", global_assert)
     result_list = get_results(endpoint_url, new_query)
     # Extract the documents found from the Cellar
+    celex_id= []
     for doc in result_list['results']['bindings']:
         if "celex:" in doc['celex_id']['value']:
-            new_query = query_doc_from_celex.replace("#celex", doc['celex_id']['value'])
-            doc_parts = get_results(endpoint_url, new_query)
-            for part in doc_parts['results']['bindings']:
-                r = requests.get(part['item']['value'])
+            if doc['celex_id']['value'] not in celex_id:
+                celex_id.append(doc['celex_id']['value'])
+    for celex in celex_id:
+        new_query = query_doc_from_celex.replace("#celex", celex)
+        doc_parts = get_results(endpoint_url, new_query)
+        for part in doc_parts['results']['bindings']:
+            r = requests.get(part['item']['value'])
+            if "application/xml" in r.headers['Content-Type']:
                 push_mongo_db(doc['celex_id']['value'], r.text, part['item']['value'])
     return assertion
 
 
 def push_mongo_db(celex, data, file_uri):
-    myclient = MongoClient("mongodb://localhost:27017")
-    db = myclient["Documents"]
-    collection = db["documents"]
 
+    global counter
+    myclient = MongoClient("mongodb://localhost:27017")
+    db = myclient[mongo_db_database]
+    collection = db[mongo_db_collection]
+    counter = counter + 1
+    print(counter)
     try:
         if collection.find_one({"file_uri": file_uri}):
             # delete and replace the duplicated id
