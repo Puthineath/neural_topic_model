@@ -22,7 +22,8 @@ dist/
 # Maven
 target/
 dist/
-
+data/*.bin
+data/*.gz
 # JetBrains IDE
 .idea/
 
