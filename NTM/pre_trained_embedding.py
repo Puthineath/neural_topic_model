@@ -16,6 +16,7 @@ from gensim import corpora
 import pickle
 # nltk.download('wordnet')
 from nltk.corpus import wordnet as wn
+import numpy as np
 import json
 from json import JSONEncoder
 import csv
@@ -182,7 +183,13 @@ def save_txt():
     with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.txt', 'w') as f:
         for dict in word_embedding:
             for word, embed in dict.items():
+                # if type(embed) == np.array:
+                #     embed = embed.tolist()
+                #     embed = ''.join(str(e) for e in embed)
+                #     f.write(f"{word} {embed}\n")
+                # else:
                 f.write(f"{word} {embed}\n")
+
 def main():
     print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
     print(f'Words do not appear in documents (d_neg):\n{merge_value(list_of_sample_id_negative())}')
