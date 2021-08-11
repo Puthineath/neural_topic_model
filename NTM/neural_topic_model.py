@@ -29,7 +29,7 @@ def n_gram_topic_layer(word,weight_k_topic):
     return torch.sigmoid(result)
 
 # get le'
-def n_gram_topic_layer2(le,weight_k_topic):
+def le2(le,weight_k_topic):
     le2 = torch.mm(le,torch.transpose(weight_k_topic,0,1))
     return torch.sigmoid(le2)
 
@@ -50,20 +50,22 @@ def main():
     #     for id,tokens in document.items():
     #         for word in tokens:
     #             embedding = load_word(word[0])
-
+    word = torch.reshape(torch.from_numpy(dog_embed),[1,300])
     w2 = torch.randn(300, 5)
-    le = n_gram_topic_layer(torch.from_numpy(dog_embed), w2)
-    le2=n_gram_topic_layer2(le,w2)
-    print(f"le:\n {le}")
-    print(f"le':\n {le2}")
+    le = n_gram_topic_layer(word, w2)
+    le_=le2(le,w2)
+
+    print(f"lt:\n {le}")
+    print(f"lt:\n {le.shape}")
+    print(f"le':\n {le_}")
+    print(f"le':\n {le_.shape}")
     return
 
-# def tensor():
-#     dog_embed = load_word('dog')
-#     print(type(torch.from_numpy(dog_embed)))
+
 
 if __name__ == '__main__':
     main()
+
 
 
 
