@@ -1,5 +1,4 @@
 """
-    - Pre-process data
     - Get the unique tokens from datasets
     - Match the word in dataset to the embedding from word2vec
     - Get the dictionary {word:doc} of words whether it appear in each document
@@ -7,64 +6,13 @@
 """
 
 from gensim.models import KeyedVectors
-from nltk.stem.wordnet import WordNetLemmatizer
-import nltk
-import re
-from spacy.lang.en import English
 import pandas as pd
 from gensim import corpora
 import pickle
 # nltk.download('wordnet')
-from nltk.corpus import wordnet as wn
-import numpy as np
-import json
-from json import JSONEncoder
 import csv
-parser = English()
-# nltk.download('stopwords')
+from pre_processing import pre_processing
 
-# pre_process data
-def tokenize(text):
-    lda_tokens = []
-    tokens = parser(text)
-    for token in tokens:
-        if token.orth_.isspace():
-            continue
-        elif token.like_url:
-            lda_tokens.append('URL')
-        elif token.orth_.startswith('@'):
-            lda_tokens.append('SCREEN_NAME')
-        else:
-            lda_tokens.append(token.lower_)
-    return lda_tokens
-
-def get_lemma(word):
-    lemma = wn.morphy(word)
-    if lemma is None:
-        return word
-    else:
-        return lemma
-
-def get_lemma2(word):
-    return WordNetLemmatizer().lemmatize(word)
-
-def pre_processing(text):
-    # en_stop = set(nltk.corpus.stopwords.words('english'))
-    en_stop = nltk.corpus.stopwords.words('english')
-    # add more stop words mostly appear in the texts
-    en_stop.extend(['programme', 'accordance', 'article', 'state', 'member', 'this', 'annex', 'paragraph'])
-    # remove numbers and non-word
-    text = re.sub(r'\W*\d+\W*|\W+\w+\W', ' ', text)
-    # # tokenize the text
-    tokens = tokenize(text)
-    # # get the words whose length are greater than 4 characters
-    tokens = [token for token in tokens if len(token) > 4]
-    # # remove stop words
-    tokens = [token for token in tokens if token not in en_stop]
-    # # get lemma
-    tokens = [get_lemma(token) for token in tokens]
-
-    return tokens
 
 # get data from the file
 def get_data():
@@ -98,10 +46,20 @@ def doc_id():
         doc_dict_list.append(doc_dict)
     return doc_dict_list
 
+def save_clean_doc_id_csv(doc_dict_list):
+    # open the file in the write mode
+    with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.csv', 'w') as f:
+        # create the csv writer
+        writer = csv.writer(f)
+        for dictionary in doc_dict_list:
+            for key, value in dictionary.items():
+                writer.writerow([key, value])
+        return
+
 # check if the a word in the document or not
 # doc positive
 """
-    sameple doc : (word, doc)
+    sample doc : (word, doc)
 """
 def sample_doc_positive(word):
     word_in_doc_list = []
@@ -183,17 +141,23 @@ def save_txt():
     with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.txt', 'w') as f:
         for dict in word_embedding:
             for word, embed in dict.items():
-                # if type(embed) == np.array:
-                #     embed = embed.tolist()
-                #     embed = ''.join(str(e) for e in embed)
-                #     f.write(f"{word} {embed}\n")
-                # else:
                 f.write(f"{word} {embed}\n")
+def save_embedding_csv():
+    word_embedding = get_word_embedding()
+    with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.csv', 'w') as f:
+        # create the csv writer
+        writer = csv.writer(f)
+        for dictionary in word_embedding:
+            for key, value in dictionary.items():
+                writer.writerow([key, value])
 
 def main():
-    print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
-    print(f'Words do not appear in documents (d_neg):\n{merge_value(list_of_sample_id_negative())}')
-    save_txt() # already saved in the data folder
+    # print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
+    # print(f'Words do not appear in documents (d_neg):\n{merge_value(list_of_sample_id_negative())}')
+    # save_txt() # already saved in the data folder
+    # doc_dict_list = doc_id()
+    # save_clean_doc_id_csv(doc_dict_list)
+    # save_embedding_csv()
     return
 
 if __name__ == '__main__':
