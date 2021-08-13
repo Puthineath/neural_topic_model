@@ -20,12 +20,14 @@ class NeuralTopicModel(nn.Module):
     torch.nn.Linear(in_features, out_features, bias=True, device=None, dtype=None)
     """
     def __init__(self):
-    # def __init__(self, word):
+    # def __init__(self, topic = 5):
         super().__init__()
         # self.word = word
         # self.doc = doc
         self.linear1 = nn.Linear(300, 5) # hidden layer 300 x 5 (topic k = 5)
         self.linear2 = nn.Linear(4, 5)  # hidden layer 4 x 5 # number of documents is 4
+
+        # w1
 
     # load the word2vec
     def load_word(self,word):
@@ -44,7 +46,7 @@ class NeuralTopicModel(nn.Module):
     def forward(self,word,doc):
         word = self.load_word(word)
         # input the word and reshape from size (300) to (1 x 300)
-        input = torch.reshape(self.array2tensor(self.load_word(word)), [1, 300])
+        input = torch.reshape(self.array2tensor(word), [1, 300])
         # get lt(g)
         lt = torch.sigmoid(self.linear1(input)) # 1 x 5
         # # get the ld(d)
