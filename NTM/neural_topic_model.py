@@ -19,13 +19,12 @@ class NeuralTopicModel(nn.Module):
     """
     torch.nn.Linear(in_features, out_features, bias=True, device=None, dtype=None)
     """
-    def __init__(self):
-    # def __init__(self, topic = 5):
+    def __init__(self, topic=5):
         super().__init__()
         # self.word = word
         # self.doc = doc
-        self.linear1 = nn.Linear(300, 5) # hidden layer 300 x 5 (topic k = 5)
-        self.linear2 = nn.Linear(4, 5)  # hidden layer 4 x 5 # number of documents is 4
+        self.linear1 = nn.Linear(300, topic) # hidden layer 300 x 5 (topic k = 5)
+        self.linear2 = nn.Linear(4, topic)  # hidden layer 4 x 5 # number of documents is 4
 
         # w1
 
@@ -51,9 +50,8 @@ class NeuralTopicModel(nn.Module):
         lt = torch.sigmoid(self.linear1(input)) # 1 x 5
         # # get the ld(d)
         ld = F.softmax(doc,dim=1) # random setting
-        # get the score layer
+        # get the score layer (ls = lt x ld.T)
         ls = torch.dot(torch.reshape(lt,(-1,)),torch.reshape(torch.transpose(ld,0,1),(-1,)))
-        # ls = torch.dot(torch.reshape(lt, (-1,)), (torch.transpose(ld, 0, 1)))
         return ls
 
 def main():
