@@ -56,6 +56,15 @@ def save_clean_doc_id_csv(doc_dict_list):
                 writer.writerow([key, value])
         return
 
+def save_clean_doc_id_txt(doc_dict_list):
+    with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.txt', 'w') as f:
+        # create the csv writer
+        for dictionary in doc_dict_list:
+            for id, tokens_list in dictionary.items():
+                f.write(f"{id} {tokens_list}\n")
+        return
+
+
 # check if the a word in the document or not
 # doc positive
 """
@@ -142,6 +151,7 @@ def save_txt():
         for dict in word_embedding:
             for word, embed in dict.items():
                 f.write(f"{word} {embed}\n")
+
 def save_embedding_csv():
     word_embedding = get_word_embedding()
     with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.csv', 'w') as f:
@@ -155,9 +165,10 @@ def main():
     # print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
     # print(f'Words do not appear in documents (d_neg):\n{merge_value(list_of_sample_id_negative())}')
     # save_txt() # already saved in the data folder
-    # doc_dict_list = doc_id()
+    doc_dict_list = doc_id()
     # save_clean_doc_id_csv(doc_dict_list)
     # save_embedding_csv()
+    save_clean_doc_id_txt(doc_dict_list)
     return
 
 if __name__ == '__main__':
