@@ -25,9 +25,7 @@ class NeuralTopicModel(nn.Module):
         # self.doc = doc
         self.linear1 = nn.Linear(300, topic) # hidden layer 300 x 5 (topic k = 5)
         self.linear2 = nn.Linear(4, topic)  # hidden layer 4 x 5 # number of documents is 4
-
         # w1
-
     # load the word2vec
     def load_word(self,word):
         name = "C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/GoogleNews-vectors-negative300.bin.gz"
@@ -44,6 +42,7 @@ class NeuralTopicModel(nn.Module):
 
     def forward(self,word,doc):
         word = self.load_word(word)
+        # doc = torch.randn(1,5)
         # input the word and reshape from size (300) to (1 x 300)
         input = torch.reshape(self.array2tensor(word), [1, 300])
         # get lt(g)
@@ -54,12 +53,42 @@ class NeuralTopicModel(nn.Module):
         ls = torch.dot(torch.reshape(lt,(-1,)),torch.reshape(torch.transpose(ld,0,1),(-1,)))
         return ls
 
+
 def main():
     model = NeuralTopicModel() # use random size of document
-    print(model.forward('dog',torch.randn(1,5)))
+
+    output = model.forward('dog',torch.randn(1,5))
+    target = torch.randn(1)
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, weight_decay=0.001)
+    criterion = nn.MSELoss()
+
+    optimizer.zero_grad()
+
+    loss = criterion(output, target)
+
+    # print('linear1.bias.grad before backward')
+    # print(model.linear1.bias.grad)
+
+    loss.backward()
+
+    # print('conv1.bias.grad after backward')
+    # print(model.linear1.bias.grad)
+
+    optimizer.step()
+    print(loss)
+
+
+    # params = list(model.parameters())
+    # print(params)
+    # print(len(params))
+    # print(params[0].size())
+    # model.zero_grad()
+    # out.backward()
 
 if __name__ == '__main__':
-        main()
+    main()
+
 
 # #---------------------------manual-----------------------------------
 # # get lt
@@ -103,6 +132,13 @@ if __name__ == '__main__':
 # #     print(f"le':\n {le_.shape}")
 # #     return
 
+
+
+
+# if the words appear many time is a doc, so it will be a topic
+# need to get the number from w2
+# sum up the frequency, then find the high frequency of the words, one ld of per document
+# a,b,c,d,e
 
 
 

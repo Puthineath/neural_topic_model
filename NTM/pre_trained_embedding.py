@@ -165,10 +165,13 @@ def main():
     # print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
     # print(f'Words do not appear in documents (d_neg):\n{merge_value(list_of_sample_id_negative())}')
     # save_txt() # already saved in the data folder
-    doc_dict_list = doc_id()
+    # doc_dict_list = doc_id()
     # save_clean_doc_id_csv(doc_dict_list)
     # save_embedding_csv()
-    save_clean_doc_id_txt(doc_dict_list)
+    # save_clean_doc_id_txt(doc_dict_list)
+    # print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
+    print(f'Words do not appear in documents (d_neg):\n{list_of_sample_id_negative()}')
+    print(f'Words appear in documents (d_pos):\n{list_of_sample_id_positive()}')
     return
 
 if __name__ == '__main__':
