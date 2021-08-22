@@ -46,6 +46,7 @@ def doc_id():
         doc_dict_list.append(doc_dict)
     return doc_dict_list
 
+
 def save_clean_doc_id_csv(doc_dict_list):
     # open the file in the write mode
     with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.csv', 'w') as f:
@@ -55,6 +56,7 @@ def save_clean_doc_id_csv(doc_dict_list):
             for key, value in dictionary.items():
                 writer.writerow([key, value])
         return
+
 
 def save_clean_doc_id_txt(doc_dict_list):
     with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.txt', 'w') as f:
@@ -70,6 +72,8 @@ def save_clean_doc_id_txt(doc_dict_list):
 """
     sample doc : (word, doc)
 """
+
+
 def sample_doc_positive(word):
     word_in_doc_list = []
     word_not_in_doc_list = []
@@ -83,6 +87,7 @@ def sample_doc_positive(word):
                 word_not_in_doc_list.append(word_not_in_doc_dict)
     return word_in_doc_list
     # return word_in_doc_list,word_not_in_doc_list
+
 
 # doc negative
 def sample_doc_negative(word):
@@ -98,6 +103,7 @@ def sample_doc_negative(word):
                 word_not_in_doc_list.append(word_not_in_doc_dict)
     return word_not_in_doc_list
 
+
 # get dictionary. dictionary is vocab (vocab refer to the distinct tokens in the dataset)
 def get_dictionary():
     dictionary = corpora.Dictionary(clean_words_doc)
@@ -106,17 +112,20 @@ def get_dictionary():
     dictionary.save('dictionary.gensim')
     return dictionary
 
+
 def list_of_sample_id_positive():
     sample_doc_list_positive = []
     for word in get_dictionary().token2id:
         sample_doc_list_positive.append(sample_doc_positive(word))
     return sample_doc_list_positive
 
+
 def list_of_sample_id_negative():
     sample_doc_list_negative = []
     for word in get_dictionary().token2id:
         sample_doc_list_negative.append(sample_doc_negative(word))
     return sample_doc_list_negative
+
 
 # merge values to the same key
 def merge_list_of_dictionaries(dict_list):
@@ -128,11 +137,13 @@ def merge_list_of_dictionaries(dict_list):
             new_dict[d_key].append(d[d_key])
     return new_dict
 
+
 def merge_value(list_of_sample_id):
     merge_value_list=[]
     for dict in list_of_sample_id:
         merge_value_list.append(merge_list_of_dictionaries(dict))
     return  merge_value_list
+
 
 # get the word and its embeddings
 def get_word_embedding():
@@ -145,12 +156,14 @@ def get_word_embedding():
             list_of_embedding.append({word: 0})
     return list_of_embedding
 
+
 def save_txt():
     word_embedding = get_word_embedding()
     with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.txt', 'w') as f:
         for dict in word_embedding:
             for word, embed in dict.items():
                 f.write(f"{word} {embed}\n")
+
 
 def save_embedding_csv():
     word_embedding = get_word_embedding()
@@ -160,6 +173,7 @@ def save_embedding_csv():
         for dictionary in word_embedding:
             for key, value in dictionary.items():
                 writer.writerow([key, value])
+
 
 def main():
     # print(f'Words appear in documents (d_pos):\n{merge_value(list_of_sample_id_positive())}\n')
@@ -173,6 +187,7 @@ def main():
     print(f'Words do not appear in documents (d_neg):\n{list_of_sample_id_negative()}')
     print(f'Words appear in documents (d_pos):\n{list_of_sample_id_positive()}')
     return
+
 
 if __name__ == '__main__':
     main()
