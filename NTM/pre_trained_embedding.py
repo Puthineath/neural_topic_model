@@ -159,7 +159,7 @@ def get_word_embedding():
 
 def save_txt():
     word_embedding = get_word_embedding()
-    with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.txt', 'w') as f:
+    with open('data/data_embeddings.txt', 'w') as f:
         for dict in word_embedding:
             for word, embed in dict.items():
                 f.write(f"{word} {embed}\n")
@@ -167,7 +167,7 @@ def save_txt():
 
 def save_embedding_csv():
     word_embedding = get_word_embedding()
-    with open('C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/data_embeddings.csv', 'w') as f:
+    with open('data/data_embeddings.csv', 'w') as f:
         # create the csv writer
         writer = csv.writer(f)
         for dictionary in word_embedding:
@@ -191,6 +191,7 @@ def main():
 
 if __name__ == '__main__':
     main()
+    print("end")
 
 
 
