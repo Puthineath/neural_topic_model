@@ -12,7 +12,6 @@ import csv
 """
 # import numpy as np
 
-
 data_path = 'C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.csv'
 
 class NeuralTopicModel(nn.Module):
@@ -23,8 +22,8 @@ class NeuralTopicModel(nn.Module):
         super().__init__()
         # self.word = word
         # self.doc = doc
-        self.linear1 = nn.Linear(300, topic) # hidden layer 300 x 5 (topic k = 5)
-        self.linear2 = nn.Linear(4, topic)  # hidden layer 4 x 5 # number of documents is 4
+        self.w2 = torch.randn(300, topic) # hidden layer 300 x 5 (topic k = 5)
+        self.w1 = torch.randn(4, topic)  # hidden layer 4 x 5 # number of documents is 4
         # w1
     # load the word2vec
     def load_word(self,word):
@@ -40,105 +39,41 @@ class NeuralTopicModel(nn.Module):
     def array2tensor(self,array):
         return torch.from_numpy(array)
 
-    def forward(self,word,doc):
+    def ls(self,word,doc_id):
         word = self.load_word(word)
         # doc = torch.randn(1,5)
         # input the word and reshape from size (300) to (1 x 300)
         input = torch.reshape(self.array2tensor(word), [1, 300])
-        # get lt(g)
-        lt = torch.sigmoid(self.linear1(input)) # 1 x 5
+        # get lt(g) by multiplying the matrix of input word and w2
+        lt = torch.sigmoid(torch.mm(input,self.w2))
         # # get the ld(d)
-        ld = F.softmax(doc,dim=1) # random setting
-        # get the score layer (ls = lt x ld.T)
-        ls = torch.dot(torch.reshape(lt,(-1,)),torch.reshape(torch.transpose(ld,0,1),(-1,)))
+        ld = F.softmax(doc_id, dim=1)
+        # # get the score layer (ls = lt x ld.T)
+        ls = torch.dot(torch.reshape(lt, (-1,)), torch.reshape(torch.transpose(ld, 0, 1), (-1,)))
         return ls
+
+    def cost_func(self,g, d_pos, d_neg):
+        omega = 0.5
+        a = self.ls(g, d_pos)
+        b = self.ls(g, d_neg)
+        result = max(0, (omega - a + b))
+        return result
+
+    def forward(self,word,d_pos,d_neg):
+        cos = self.cost_func(word,d_pos,d_neg)
+        return cos
 
 
 def main():
     model = NeuralTopicModel() # use random size of document
+    print(model.cost_func('dog',torch.randn(1,5),torch.randn(1,5)))
 
-    output = model.forward('dog',torch.randn(1,5))
-    target = torch.randn(1)
-
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, weight_decay=0.001)
-    criterion = nn.MSELoss()
-
-    optimizer.zero_grad()
-
-    loss = criterion(output, target)
-
-    # print('linear1.bias.grad before backward')
-    # print(model.linear1.bias.grad)
-
-    loss.backward()
-
-    # print('conv1.bias.grad after backward')
-    # print(model.linear1.bias.grad)
-
-    optimizer.step()
-    print(loss)
-
-
-    # params = list(model.parameters())
-    # print(params)
-    # print(len(params))
-    # print(params[0].size())
-    # model.zero_grad()
-    # out.backward()
 
 if __name__ == '__main__':
     main()
 
 
-# #---------------------------manual-----------------------------------
-# # get lt
-#     def n_gram_topic_layer(word,weight_k_topic):
-#         """
-#         :param word: word (1 x 300)
-#         :param weight_k_topic: word x topic = 300 x k (topic = k)
-#         :return: topic_layer 1 x k
-#         """
-#         result = torch.mm(word, weight_k_topic)
-#         return torch.sigmoid(result)
-#
-#     # get le'
-#     def le2(word,weight_k_topic):
-#         le2 = torch.mm(word,torch.transpose(weight_k_topic,0,1))
-#         return torch.sigmoid(le2)
-#
-# # get ld(d)
-#     def topic_doc_layer():
-#         return
-#
-#     def score_layer():
-#         return
-#
-# # def main_():
-# #     documents = doc_id()
-# #     dog_embed = load_word('dog')
-# #     # for document in documents:
-# #     #     for id,tokens in document.items():
-# #     #         for word in tokens:
-# #     #             embedding = load_word(word[0])
-# #     word = torch.reshape(torch.from_numpy(dog_embed),[1,300])
-# #     w2 = torch.randn(300, 5)
-# #     lt = n_gram_topic_layer(word, w2)
-# #     le_=le2(lt,w2)
-# #
-# #     print(f"lt:\n {lt}")
-# #     print(f"lt:\n {lt.shape}")
-# #
-# #     print(f"le':\n {le_}")
-# #     print(f"le':\n {le_.shape}")
-# #     return
 
-
-
-
-# if the words appear many time is a doc, so it will be a topic
-# need to get the number from w2
-# sum up the frequency, then find the high frequency of the words, one ld of per document
-# a,b,c,d,e
 
 
 
