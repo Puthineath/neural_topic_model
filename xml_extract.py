@@ -69,6 +69,8 @@ def get_data(folder):
 
         # get only one label for testing
         data['label'] = get_data_mongo(folder)[0]
+        # get all the labels
+        # data['label'] = get_data_mongo(folder)
 
         return data
 
