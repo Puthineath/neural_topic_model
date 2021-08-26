@@ -33,27 +33,6 @@ negative = merge_value(list_of_sample_id_negative())
 
 # training model
 # def train_ntm(topics, epochs):
-data_pos_path = 'C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/word_docs_pos.txt'
-data_neg_path = 'C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/word_docs_neg.txt'
-
-def load_file_data(file_path):
-    with open(file_path, "r") as f:
-        return [line.strip() for line in f]
-
-def test():
-    # print(load_file_data(data_pos_path))
-    positive = load_file_data(data_pos_path)
-    my_dict = {}
-    for i,j in enumerate(positive):
-        print(i)
-        k = re.split(" ", j, 1)
-        list_of_elt = re.split("'", k[1])
-        new_list = []
-        for elt in list_of_elt:
-            if "id" in elt:
-                new_list.append(elt)
-        my_dict[k[0]] = new_list
-    return
 
 def main():
 
@@ -84,6 +63,6 @@ if __name__ == '__main__':
     # train_ntm()
     # output = cos('dog')
     # print(output)
-    print(test())
+    # print(test())
 
-    # print(main())
+    print(get_data())
