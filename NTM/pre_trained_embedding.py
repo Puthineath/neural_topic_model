@@ -12,6 +12,7 @@ import pickle
 # nltk.download('wordnet')
 import csv
 from pre_processing import pre_processing
+import torch, torch.nn as nn
 
 
 # get data from the file
@@ -173,6 +174,23 @@ def save_embedding_csv():
         for dictionary in word_embedding:
             for key, value in dictionary.items():
                 writer.writerow([key, value])
+
+
+def w2_training():
+    shape = (1, 300)
+    le = torch.rand(shape) # hidden layer 1 x 300
+    shape = (1, 5)
+    M = torch.zeros(shape)
+    K = 5
+    shape = (300, K)
+    w2 = torch.rand(shape)
+    w2_t = torch.transpose(w2, 0, 1)
+    intermediate = le * w2
+    le_prime = torch.sigmoid(intermediate)
+    #le_prime = torch.sigmoid()
+    print(le)
+    return
+
 
 
 def main():
