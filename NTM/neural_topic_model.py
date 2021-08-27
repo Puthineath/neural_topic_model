@@ -10,7 +10,6 @@ import csv
 """
     create neural topic model based on Cao et al.
 """
-# import numpy as np
 
 data_path = 'C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.csv'
 
@@ -20,11 +19,8 @@ class NeuralTopicModel(nn.Module):
     """
     def __init__(self, topic=5):
         super().__init__()
-        # self.word = word
-        # self.doc = doc
-        self.w2 = torch.randn(300, topic) # hidden layer 300 x 5 (topic k = 5)
-        self.w1 = torch.randn(4, topic)  # hidden layer 4 x 5 # number of documents is 4
-        # w1
+        self.w2 = torch.randn(300, topic) #  300 x 5 (topic k = 5)
+        self.w1 = torch.randn(4, topic)  #  4 x 5 # number of documents is 4
     # load the word2vec
     def load_word(self,word):
         name = "C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/GoogleNews-vectors-negative300.bin.gz"
@@ -41,13 +37,12 @@ class NeuralTopicModel(nn.Module):
 
     def ls(self,word,doc_id):
         word = self.load_word(word)
-        # doc = torch.randn(1,5)
-        # input the word and reshape from size (300) to (1 x 300)
-        input = torch.reshape(self.array2tensor(word), [1, 300])
+        # change tensor from size (300) to (1 x 300)
+        input = torch.unsqueeze(self.array2tensor(word), 0)
         # get lt(g) by multiplying the matrix of input word and w2
         lt = torch.sigmoid(torch.mm(input,self.w2))
         # # get the ld(d)
-        ld = F.softmax(doc_id, dim=1)
+        ld = F.softmax(doc_id, dim=-1)
         # # get the score layer (ls = lt x ld.T)
         ls = torch.dot(torch.reshape(lt, (-1,)), torch.reshape(torch.transpose(ld, 0, 1), (-1,)))
         return ls
@@ -66,8 +61,9 @@ class NeuralTopicModel(nn.Module):
 
 def main():
     model = NeuralTopicModel() # use random size of document
+    # test
     print(model.cost_func('dog',torch.randn(1,5),torch.randn(1,5)))
-
+    print(model.ls('dog',torch.randn(1,5)))
 
 if __name__ == '__main__':
     main()
