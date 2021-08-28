@@ -72,18 +72,15 @@ def save_clean_doc_id_txt(doc_dict_list):
     sample doc : {word:doc}
 """
 
-
 def sample_doc_positive(word):
     word_in_doc_list = []
     word_not_in_doc_list = []
     for i in doc_id():
         for key, value in i.items():
             if word in value:
-                word_in_doc_dict = {word:key}
-                word_in_doc_list.append(word_in_doc_dict)
-            else:
-                word_not_in_doc_dict = {word: key}
-                word_not_in_doc_list.append(word_not_in_doc_dict)
+                # word_in_doc_dict = {word:key}
+                word_in_doc_list.append({word:key})
+
     return word_in_doc_list
     # return word_in_doc_list,word_not_in_doc_list
 
@@ -92,15 +89,24 @@ def sample_doc_positive(word):
 def sample_doc_negative(word):
     word_in_doc_list = []
     word_not_in_doc_list = []
-
+    n = False
     for i in doc_id():
+
         for key, value in i.items():
-            if word in value:
-                word_in_doc_dict = {word:key}
-                word_in_doc_list.append(word_in_doc_dict)
-            else:
-                word_not_in_doc_dict = {word: key}
+
+            # if word in value:
+            #     word_in_doc_dict = {word:key}
+            #     word_in_doc_list.append(word_in_doc_dict)
+            if word not in value:
+                word_not_in_doc_dict = {word:key}
                 word_not_in_doc_list.append(word_not_in_doc_dict)
+            else:
+                n=True
+
+    if(n==True):
+        word_not_in_doc_list.append({word:None})
+
+
     return word_not_in_doc_list
 
 
@@ -130,12 +136,15 @@ def list_of_sample_id_negative():
 # merge values to the same key
 def merge_list_of_dictionaries(dict_list):
     new_dict = {}
+    new_dict1={}
     for d in dict_list:
-        for d_key in d:
+        for d_key,d_value in d.items():
             if d_key not in new_dict:
                 new_dict[d_key] = []
             new_dict[d_key].append(d[d_key])
-    return new_dict
+    for k,v in new_dict.items():
+        new_dict1[k] = [val for val in v if val != None]
+    return new_dict1
 
 
 def merge_value(list_of_sample_id):
@@ -241,10 +250,10 @@ def main():
 #test
 
 if __name__ == '__main__':
-    # main()
+    main()
     # print(get_word_embedding()
     # print(word2vec())
-    print(save_word_docs_txt())
+    # print(save_word_docs_txt())
 
 
 

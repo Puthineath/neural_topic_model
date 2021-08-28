@@ -21,40 +21,48 @@ negative = merge_value(list_of_sample_id_negative())
 
 data = DataTask(positive,negative)
 
-def get_word(dict):
-    for word, ids in dict.items():
-        return word
-
-def get_id_pos(dict):
-    for word,ids_pos in dict.items():
-        for id_pos in ids_pos:
-            return id_pos
-
-def get_id_neg(dict):
-    if dict == {}:
-        return 'id_0' #***** need to check this
-    else:
-        for word, ids_neg in dict.items():
-            return random.choice(ids_neg)
-
-def get_data(pos_neg_data):
-    positive_dict, negative_dict = pos_neg_data
-    return get_word(positive_dict), get_id_pos(positive_dict), get_id_neg(negative_dict)
 
 # get cost function
 def get_cost_func():
     model = NeuralTopicModel()  # use random size of document
     w1 = model.w1
     w2 = model.w2
-    for i in range(len(data.positive)):
-        word, d_pos, d_neg = get_data(data.get(i))
+    single_data_list = []
+    for i in data.positive:
+        for g, d_pos_list in i.items():
+            single_data_list.append(g)
+            for d_pos in d_pos_list:
+                single_data_list.append(d_pos)
+                for j in data.negative:
+                    for d_neg_list in j.values():
+                        try:
+                            single_data_list.append(random.choice(d_neg_list))
+                        except:
+                            single_data_list.append(None)
+
+                        # id_pos = int(' '.join(re.findall("\d+", single_data_list[]))) #get only the number from 'id_0' => '0'
+                        # id_neg = int(' '.join(re.findall("\d+", d_neg)))
+                        # # change dimension from 5 to 1 x 5
+                        # d_pos_new = torch.unsqueeze(w1[id_pos],0)
+                        # d_neg_new = torch.unsqueeze(w1[id_neg],0)
+
+
+
+                    print(single_data_list)
+
+
+
+
+        # word, d_pos, d_neg = get_data(data.get(i))
         # for word, d_pos, d_neg in get_data(data.get(i)):
-        id_pos = int(' '.join(re.findall("\d+", d_pos))) #get only the number from 'id_0' => '0'
-        id_neg = int(' '.join(re.findall("\d+", d_neg)))
-        # change dimension from 5 to 1 x 5
-        d_pos = torch.unsqueeze(w1[id_pos],0)
-        d_neg = torch.unsqueeze(w1[id_neg],0)
-        print(model.cost_func(word,d_pos,d_neg))
+
+
+        # id_pos = int(' '.join(re.findall("\d+", d_pos))) #get only the number from 'id_0' => '0'
+        # id_neg = int(' '.join(re.findall("\d+", d_neg)))
+        # # change dimension from 5 to 1 x 5
+        # d_pos = torch.unsqueeze(w1[id_pos],0)
+        # d_neg = torch.unsqueeze(w1[id_neg],0)
+        # print(model.cost_func(word,d_pos,d_neg))
 
 if __name__ == '__main__':
     print(get_cost_func())

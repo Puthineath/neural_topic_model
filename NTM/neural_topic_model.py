@@ -47,12 +47,16 @@ class NeuralTopicModel(nn.Module):
         ls = torch.dot(torch.reshape(lt, (-1,)), torch.reshape(torch.transpose(ld, 0, 1), (-1,)))
         return ls
 
-    def cost_func(self,g, d_pos, d_neg):
+    def cost_func(self,g, d_pos, d_neg = None):
         omega = 0.5
-        a = self.ls(g, d_pos)
-        b = self.ls(g, d_neg)
-        result = max(0, (omega - a + b))
+        ls_score_pos = self.ls(g, d_pos)
+        ls_score_neg = self.ls(g, d_neg)
+        if d_neg == None:
+            result = max(0, (omega - ls_score_pos))
+        else:
+            result = max(0, (omega - ls_score_pos + ls_score_neg))
         return result
+
 
     def forward(self,word,d_pos,d_neg):
         cos = self.cost_func(word,d_pos,d_neg)

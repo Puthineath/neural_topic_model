@@ -24,11 +24,13 @@ class DataTask(Dataset):
         return dict_pos_list, dict_neg_list
 
 
+
 data = DataTask(positive,negative)
 
 if __name__ == '__main__':
     print(len(data.positive))
     print(data.get(1))
+
 
 
 
