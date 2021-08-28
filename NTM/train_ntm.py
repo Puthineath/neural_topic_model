@@ -27,18 +27,36 @@ def get_cost_func():
     model = NeuralTopicModel()  # use random size of document
     w1 = model.w1
     w2 = model.w2
-    single_data_list = []
+    list_data = []
+    single_data_pos_list = []
+    single_data_neg_list = []
     for i in data.positive:
         for g, d_pos_list in i.items():
-            single_data_list.append(g)
             for d_pos in d_pos_list:
-                single_data_list.append(d_pos)
-                for j in data.negative:
-                    for d_neg_list in j.values():
-                        try:
-                            single_data_list.append(random.choice(d_neg_list))
-                        except:
-                            single_data_list.append(None)
+                single_data_pos_list.append({g:d_pos})
+    for j in data.negative:
+        for g1,d_neg_list in j.items():
+            if d_neg_list == []:
+                single_data_neg_list.append({g1: None})
+            else:
+                for d_neg in d_neg_list:
+                    single_data_neg_list.append({g1: random.choice(d_neg_list)})
+
+    # zip dictionary and created to one list and then calculate cost_function
+    #             - store value into a list
+
+
+            # for d_pos in d_pos_list:
+            #     for j in data.negative:
+            #         for d_neg_list in j.values():
+            #             try:
+            #                 single_data_list.append({g:[d_pos,random.choice(d_neg_list)]})
+            #             except:
+            #                 single_data_list.append({g:[d_pos,None]})
+            #                 # list_data.append(single_data_list)
+            #             print(single_data_list)
+
+
 
                         # id_pos = int(' '.join(re.findall("\d+", single_data_list[]))) #get only the number from 'id_0' => '0'
                         # id_neg = int(' '.join(re.findall("\d+", d_neg)))
@@ -48,7 +66,7 @@ def get_cost_func():
 
 
 
-                    print(single_data_list)
+                print(list_data)
 
 
 
