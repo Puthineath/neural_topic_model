@@ -36,11 +36,14 @@ def get_cost_func():
                 single_data_pos_list.append({g:d_pos})
     for j in data.negative:
         for g1,d_neg_list in j.items():
-            if d_neg_list == []:
-                single_data_neg_list.append({g1: None})
-            else:
-                for d_neg in d_neg_list:
-                    single_data_neg_list.append({g1: random.choice(d_neg_list)})
+            # if d_neg_list == []:
+                # single_data_neg_list.append({g1: None})
+            # else:
+            for d_neg in d_neg_list:
+
+                # single_data_neg_list.append({g1: int(str(random.choice([d_neg for d_neg in d_neg_list if d_neg != None])))})
+                single_data_neg_list.append({g1: random.choice(d_neg_list)})
+
 
     # zip dictionary and created to one list and then calculate cost_function
     #             - store value into a list
