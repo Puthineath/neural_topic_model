@@ -41,20 +41,18 @@ class NeuralTopicModel(nn.Module):
         input = torch.unsqueeze(self.array2tensor(word), 0)
         # get lt(g) by multiplying the matrix of input word and w2
         lt = torch.sigmoid(torch.mm(input,self.w2))
-        # # get the ld(d)
-        ld = F.softmax(doc_id, dim=-1)
-        # # get the score layer (ls = lt x ld.T)
+        # get the ld(d)
+        ld = F.softmax(doc_id, dim=1)
+        # get the score layer (ls = lt x ld.T)
         ls = torch.dot(torch.reshape(lt, (-1,)), torch.reshape(torch.transpose(ld, 0, 1), (-1,)))
         return ls
 
-    def cost_func(self,g, d_pos, d_neg = None):
-        omega = 0.5
-        ls_score_pos = self.ls(g, d_pos)
-        ls_score_neg = self.ls(g, d_neg)
-        if d_neg == None:
-            result = max(0, (omega - ls_score_pos))
+    def cost_func(self,g, d_pos, d_neg):
+        # omega = 0.5
+        if d_neg == '':
+            result = max(0, (0.5 - self.ls(g, d_pos)))
         else:
-            result = max(0, (omega - ls_score_pos + ls_score_neg))
+            result = max(0, (0.5 - self.ls(g, d_pos) + self.ls(g, d_neg)))
         return result
 
 

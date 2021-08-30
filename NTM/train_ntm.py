@@ -27,66 +27,70 @@ def get_cost_func():
     model = NeuralTopicModel()  # use random size of document
     w1 = model.w1
     w2 = model.w2
-    list_data = []
+#------------------------------------------load data---------------------------------------
+    d_pos_list_len = []
     single_data_pos_list = []
     single_data_neg_list = []
+
+    # get each element of positive doc
     for i in data.positive:
         for g, d_pos_list in i.items():
+            d_pos_list_len.append(len(d_pos_list))
             for d_pos in d_pos_list:
                 single_data_pos_list.append({g:d_pos})
-    for j in data.negative:
-        for g1,d_neg_list in j.items():
-            # if d_neg_list == []:
-                # single_data_neg_list.append({g1: None})
-            # else:
-            for d_neg in d_neg_list:
 
-                # single_data_neg_list.append({g1: int(str(random.choice([d_neg for d_neg in d_neg_list if d_neg != None])))})
-                single_data_neg_list.append({g1: random.choice(d_neg_list)})
+    # get random d_neg of negative docs based on the length of each len of positive docs
+    for index,j in enumerate(data.negative):
+        for k in range(d_pos_list_len[index]):
+            for g1,d_neg_list in j.items():
+                if d_neg_list == []:
+                    single_data_neg_list.append({g1: ''})
+                else:
+                    single_data_neg_list.append({g1: random.choice(d_neg_list)})
 
+    # put all 3 elements into one list and then put all the lists into final_data_list
+    word_dpos_list = []
+    final_data_list = []
+        # put only positive value in the final_data_list first
+    for single_data_pos in single_data_pos_list:
+        for word, d_pos in single_data_pos.items():
+            word_dpos_list.append(word)
+            word_dpos_list.append(d_pos)
+            word_dpos_list.copy()
+            final_data_list.append(word_dpos_list.copy())
+            word_dpos_list.clear()
+        # add negative document into the final_data_list
+    for index,single_data_neg in enumerate(single_data_neg_list):
+        for word,d_neg in single_data_neg.items():
+            final_data_list[index].append(d_neg)
 
-    # zip dictionary and created to one list and then calculate cost_function
-    #             - store value into a list
+    # load the data to calculate cost_function
+    cost_func_value = []
+    for elt in final_data_list:
+        word = elt[0]
+        d_pos = elt[1]
+        d_neg = elt[2]
 
+        # get only the number from 'id_0' => '0'
+        d_pos = int(' '.join(re.findall("\d+", d_pos)))
+        # change dimension from 5 to 1 x 5
+        d_pos = torch.unsqueeze(w1[d_pos], 0)
 
-            # for d_pos in d_pos_list:
-            #     for j in data.negative:
-            #         for d_neg_list in j.values():
-            #             try:
-            #                 single_data_list.append({g:[d_pos,random.choice(d_neg_list)]})
-            #             except:
-            #                 single_data_list.append({g:[d_pos,None]})
-            #                 # list_data.append(single_data_list)
-            #             print(single_data_list)
+        if d_neg != '':
+            d_neg = int(' '.join(re.findall("\d+", d_neg)))
+            d_neg = torch.unsqueeze(w1[d_neg],0)
 
+# --------------------------------------calculate cost function -------------------------------------
+        print(model.cost_func(word,d_pos,d_neg))
+        cost_func_value.append(model.cost_func(word,d_pos,d_neg))
 
+# ---------------------------------------training----------------------------------------------------
 
-                        # id_pos = int(' '.join(re.findall("\d+", single_data_list[]))) #get only the number from 'id_0' => '0'
-                        # id_neg = int(' '.join(re.findall("\d+", d_neg)))
-                        # # change dimension from 5 to 1 x 5
-                        # d_pos_new = torch.unsqueeze(w1[id_pos],0)
-                        # d_neg_new = torch.unsqueeze(w1[id_neg],0)
+    return cost_func_value
 
-
-
-                print(list_data)
-
-
-
-
-        # word, d_pos, d_neg = get_data(data.get(i))
-        # for word, d_pos, d_neg in get_data(data.get(i)):
-
-
-        # id_pos = int(' '.join(re.findall("\d+", d_pos))) #get only the number from 'id_0' => '0'
-        # id_neg = int(' '.join(re.findall("\d+", d_neg)))
-        # # change dimension from 5 to 1 x 5
-        # d_pos = torch.unsqueeze(w1[id_pos],0)
-        # d_neg = torch.unsqueeze(w1[id_neg],0)
-        # print(model.cost_func(word,d_pos,d_neg))
 
 if __name__ == '__main__':
     print(get_cost_func())
-    # the problem here is getting only the first element of the document is the positive list
-    # ***** need to change the model to loop everything
+
+
 

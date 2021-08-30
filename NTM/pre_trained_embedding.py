@@ -135,15 +135,15 @@ def list_of_sample_id_negative():
 # merge values to the same key
 def merge_list_of_dictionaries(dict_list):
     new_dict = {}
-    # new_dict1={}
+    new_dict1={}
     for d in dict_list:
         for d_key,d_value in d.items():
             if d_key not in new_dict:
                 new_dict[d_key] = []
             new_dict[d_key].append(d[d_key])
-    # for k,v in new_dict.items():
-    #     new_dict1[k] = [val for val in v if val != None]
-    return new_dict
+    for k,v in new_dict.items():
+        new_dict1[k] = [val for val in v if val != None]
+    return new_dict1
 
 
 def merge_value(list_of_sample_id):
