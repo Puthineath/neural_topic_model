@@ -22,15 +22,19 @@ negative = merge_value(list_of_sample_id_negative())
 data = DataTask(positive,negative)
 
 
+
 # get cost function
 def get_cost_func():
-    model = NeuralTopicModel()  # use random size of document
-    w1 = model.w1
-    w2 = model.w2
+    ntm_model = NeuralTopicModel()  # use random size of document
+    w1 = ntm_model.w1
+    w2 = ntm_model.w2
 #------------------------------------------load data---------------------------------------
     d_pos_list_len = []
     single_data_pos_list = []
     single_data_neg_list = []
+
+    optimizer = torch.optim.SGD(ntm_model.parameters(), lr=1e-3)
+    criterion = nn.MSELoss()
 
     # get each element of positive doc
     for i in data.positive:
@@ -56,7 +60,6 @@ def get_cost_func():
         for word, d_pos in single_data_pos.items():
             word_dpos_list.append(word)
             word_dpos_list.append(d_pos)
-            word_dpos_list.copy()
             final_data_list.append(word_dpos_list.copy())
             word_dpos_list.clear()
         # add negative document into the final_data_list
@@ -74,19 +77,26 @@ def get_cost_func():
         # get only the number from 'id_0' => '0'
         d_pos = int(' '.join(re.findall("\d+", d_pos)))
         # change dimension from 5 to 1 x 5
-        d_pos = torch.unsqueeze(w1[d_pos], 0)
+        d_pos = torch.unsqueeze(w1[d_pos], 0) # get the row of matrix w1 correspond to Id number
 
         if d_neg != '':
             d_neg = int(' '.join(re.findall("\d+", d_neg)))
             d_neg = torch.unsqueeze(w1[d_neg],0)
 
 # --------------------------------------calculate cost function -------------------------------------
-        print(model.cost_func(word,d_pos,d_neg))
-        cost_func_value.append(model.cost_func(word,d_pos,d_neg))
+        print(ntm_model.cost_func(word,d_pos,d_neg))
+#         cost_func_value.append(model.cost_func(word,d_pos,d_neg))
 
 # ---------------------------------------training----------------------------------------------------
+#         optimizer.zero_grad()
+#         if ntm_model.cost_func(word,d_pos,d_neg) > 0:
+#
+#             topic_pred = ntm_model(word,d_pos)
+#
+#             # loss += criterion(d_pred, d)
+#
+#             #*** look into the detail of SGD
 
-    return cost_func_value
 
 
 if __name__ == '__main__':

@@ -14,13 +14,13 @@ import csv
 data_path = 'C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/clean_docs.csv'
 
 class NeuralTopicModel(nn.Module):
-    """
-    torch.nn.Linear(in_features, out_features, bias=True, device=None, dtype=None)
-    """
+
     def __init__(self, topic=5):
         super().__init__()
         self.w2 = torch.randn(300, topic) #  300 x 5 (topic k = 5)
         self.w1 = torch.randn(4, topic)  #  4 x 5 # number of documents is 4
+
+
     # load the word2vec
     def load_word(self,word):
         name = "C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/GoogleNews-vectors-negative300.bin.gz"
@@ -35,19 +35,22 @@ class NeuralTopicModel(nn.Module):
     def array2tensor(self,array):
         return torch.from_numpy(array)
 
+# find score layer
     def ls(self,word,doc_id):
-        word = self.load_word(word)
+        le = self.load_word(word)
         # change tensor from size (300) to (1 x 300)
-        input = torch.unsqueeze(self.array2tensor(word), 0)
+        le = torch.unsqueeze(self.array2tensor(le), 0)
         # get lt(g) by multiplying the matrix of input word and w2
-        lt = torch.sigmoid(torch.mm(input,self.w2))
+        lt = torch.sigmoid(torch.mm(le,self.w2))
         # get the ld(d)
         ld = F.softmax(doc_id, dim=1)
         # get the score layer (ls = lt x ld.T)
         ls = torch.dot(torch.reshape(lt, (-1,)), torch.reshape(torch.transpose(ld, 0, 1), (-1,)))
         return ls
 
+# calculate cost_function
     def cost_func(self,g, d_pos, d_neg):
+        # g = word
         # omega = 0.5
         if d_neg == '':
             result = max(0, (0.5 - self.ls(g, d_pos)))
@@ -55,10 +58,15 @@ class NeuralTopicModel(nn.Module):
             result = max(0, (0.5 - self.ls(g, d_pos) + self.ls(g, d_neg)))
         return result
 
+# find the topic representation
+    def forward(self,word,d_pos):
+        return self.ls(word,d_pos)
 
-    def forward(self,word,d_pos,d_neg):
-        cos = self.cost_func(word,d_pos,d_neg)
-        return cos
+
+
+    # def forward(self,word,d_pos,d_neg):
+    #     cos = self.cost_func(word,d_pos,d_neg)
+    #     return cos
 
 
 def main():
