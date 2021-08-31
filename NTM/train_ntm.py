@@ -21,7 +21,7 @@ negative = merge_value(list_of_sample_id_negative())
 
 data = DataTask(positive,negative)
 
-
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # get cost function
 def get_cost_func():
@@ -33,7 +33,10 @@ def get_cost_func():
     single_data_pos_list = []
     single_data_neg_list = []
 
-    optimizer = torch.optim.SGD(ntm_model.parameters(), lr=1e-3)
+    losses_list = []
+    losses = []
+
+    optimizer = torch.optim.SGD(params =ntm_model.parameters(), lr=1e-3)
     criterion = nn.MSELoss()
 
     # get each element of positive doc
@@ -88,14 +91,32 @@ def get_cost_func():
 #         cost_func_value.append(model.cost_func(word,d_pos,d_neg))
 
 # ---------------------------------------training----------------------------------------------------
-#         optimizer.zero_grad()
-#         if ntm_model.cost_func(word,d_pos,d_neg) > 0:
-#
-#             topic_pred = ntm_model(word,d_pos)
-#
-#             # loss += criterion(d_pred, d)
-#
-#             #*** look into the detail of SGD
+
+
+        optimizer.zero_grad()
+        # to be able to add other losses, which are tensors, we initialize the loss as a 0 tensor
+        # loss = torch.tensor(0).to(device).float()
+        loss = torch.tensor(0).float()
+
+        if ntm_model.cost_func(word,d_pos,d_neg) > 0:
+
+            topic_pred = ntm_model(word,d_pos)
+
+            topic_expected = 1 # I put 1 for testing and I think the probability is maximu, 1
+
+            loss += criterion(topic_pred, topic_expected)
+
+            # once we have all the losses for one set of embeddings, we can backpropagate
+        loss.backward()
+        optimizer.step()
+
+        losses.append(loss.cpu().item())
+
+    losses_list.append(mean(losses))
+
+    print(f"Loss: {losses_list[-1]}")
+
+    #***** Next: train the model, checking the parameters and the model again
 
 
 
