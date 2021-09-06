@@ -1,5 +1,5 @@
 # pre_process data
-from gensim.models import KeyedVectors
+
 from nltk.stem.wordnet import WordNetLemmatizer
 import nltk
 import re
@@ -51,3 +51,6 @@ def pre_processing(text):
 
     return tokens
 
+if __name__ == '__main__':
+    text = '(EU 17 2017 establishment Union framework collection management use data fisheries sector Council Regulation (EC,"1.With view (EU Regulation management biological, environmental, technical socioeconomic data fisheries sector Article Regulation (EU 1380/2013.2.The data paragraph shall collected obligation collect Union legal acts Regulation.3.For data necessary fisheries management Union legal acts Regulation rules transmission data , processing, management use data collected Regulation (EC (EC 223/2009.For purposes Regulation referred Article 4 Regulation (EU addition definitions sector activities related commercial fisheries recreational fisheries aquaculture industries processing fisheries products'
+    print(pre_processing(text))

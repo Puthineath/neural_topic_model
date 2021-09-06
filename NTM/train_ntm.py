@@ -36,7 +36,8 @@ def get_cost_func():
     losses_list = []
     losses = []
 
-    optimizer = torch.optim.SGD(params =ntm_model.parameters(), lr=1e-3)
+    # create object for Stochastic Gradient Decent
+    optimizer = torch.optim.SGD(params =ntm_model.parameters(), lr=0.01)
     criterion = nn.MSELoss()
 
     # get each element of positive doc
@@ -70,6 +71,7 @@ def get_cost_func():
         for word,d_neg in single_data_neg.items():
             final_data_list[index].append(d_neg)
 
+
     # load the data to calculate cost_function
     cost_func_value = []
     for elt in final_data_list:
@@ -93,32 +95,29 @@ def get_cost_func():
 # ---------------------------------------training----------------------------------------------------
 
 
-        optimizer.zero_grad()
-        # to be able to add other losses, which are tensors, we initialize the loss as a 0 tensor
-        # loss = torch.tensor(0).to(device).float()
-        loss = torch.tensor(0).float()
+        # optimizer.zero_grad()
+        # # to be able to add other losses, which are tensors, we initialize the loss as a 0 tensor
+        # # loss = torch.tensor(0).to(device).float()
+        # loss = torch.tensor(0).float()
 
-        if ntm_model.cost_func(word,d_pos,d_neg) > 0:
+        # if ntm_model.cost_func(word,d_pos,d_neg) > 0:
+    #         predictions = ntm_model(word, d_pos)
+    #         # I put the target value to 1 because the maximum value of probab. is 1 and then I put it at the same size of the prediction
+    #         target = torch.ones(predictions.size())
+    #         loss += criterion(predictions, target)
+    #
+    #         # once we have all the losses for one set of embeddings, we can backpropagate
+    #     loss.backward()
+    #     optimizer.step()
+    #
+    #     losses.append(loss.item())
+    #
+    # losses_list.append(mean(losses))
+    #
+    # torch.save({"state_dict": ntm_model.state_dict(), "losses": losses_list},
+    #        f"../models/train1.pth")
 
-            topic_pred = ntm_model(word,d_pos)
-
-            topic_expected = 1 # I put 1 for testing and I think the probability is maximu, 1
-
-            loss += criterion(topic_pred, topic_expected)
-
-            # once we have all the losses for one set of embeddings, we can backpropagate
-        loss.backward()
-        optimizer.step()
-
-        losses.append(loss.cpu().item())
-
-    losses_list.append(mean(losses))
-
-    print(f"Loss: {losses_list[-1]}")
-
-    #***** Next: train the model, checking the parameters and the model again
-
-
+    #***** Next: train the model, checking the parameters, momentum, SGD and the model again
 
 if __name__ == '__main__':
     print(get_cost_func())

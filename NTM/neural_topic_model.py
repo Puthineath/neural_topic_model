@@ -1,6 +1,6 @@
 import pandas as pd
 import torch
-from pre_trained_embedding import word2vec, doc_id
+from pre_trained_embedding import doc_id
 from gensim.models import KeyedVectors
 import torch, torch.nn as nn
 import torch.optim as optim
@@ -19,11 +19,11 @@ class NeuralTopicModel(nn.Module):
         super().__init__()
         self.w2 = torch.randn(300, topic) #  300 x 5 (topic k = 5)
         self.w1 = torch.randn(4, topic)  #  4 x 5 # number of documents is 4
-
+        self.linear = nn.Linear(1,1)
 
     # load the word2vec
     def load_word(self,word):
-        name = "C:/Users/salbo/puthineath/eurovoc_conversion/eurovoc_conversion/data/GoogleNews-vectors-negative300.bin.gz"
+        name = "../data/GoogleNews-vectors-negative300.bin.gz"
         # Load pretrained model (since intermediate data is not included, the model cannot be refined with additional data)
         model_embeddings = KeyedVectors.load_word2vec_format(name, binary=True)
         try:
@@ -36,6 +36,7 @@ class NeuralTopicModel(nn.Module):
         return torch.from_numpy(array)
 
 # find score layer
+    # put these argument in the __init__() in order to update the weight
     def ls(self,word,doc_id):
         le = self.load_word(word)
         # change tensor from size (300) to (1 x 300)
@@ -60,20 +61,44 @@ class NeuralTopicModel(nn.Module):
 
 # find the topic representation
     def forward(self,word,d_pos):
-        return self.ls(word,d_pos)
 
-
-
-    # def forward(self,word,d_pos,d_neg):
-    #     cos = self.cost_func(word,d_pos,d_neg)
-    #     return cos
-
+        return self.linear(torch.unsqueeze(self.ls(word,d_pos), 0))
 
 def main():
-    model = NeuralTopicModel() # use random size of document
-    # test
-    print(model.cost_func('dog',torch.randn(1,5),torch.randn(1,5)))
-    print(model.ls('dog',torch.randn(1,5)))
+    ntm_model = NeuralTopicModel()
+    optimizer = torch.optim.SGD(params= ntm_model.parameters(), lr=0.01)
+    # momentum
+    criterion = nn.MSELoss()
+
+    word = 'dog'
+    d_pos = torch.randn(1,5)
+
+    epochs = 3
+    losses_list = []
+    losses = []
+
+    for i in range(0, epochs):
+        optimizer.zero_grad()
+        predictions = ntm_model(word,d_pos)
+        # I put the target value to 1 because the maximum value of probab. is 1 and then I put it at the same size of the prediction
+        target = torch.ones(predictions.size())
+        loss = criterion(predictions, target)
+
+        loss.backward()
+        optimizer.step()
+
+        print("-" * 10)
+        print(f'epoch {i}:')
+        print(f'loss:{loss}')
+        # print("all = {}".format(list(ntm_model.parameters())))
+        print("learned weight = {}".format(list(ntm_model.parameters())[0].data[0, 0]))
+        print("learned bias = {}".format(list(ntm_model.parameters())[1].data[0]))
+
+        losses.append(loss.item())
+    torch.save({"state_dict": ntm_model.state_dict(), "losses": losses}, f'../models/ntm_model1.pth')
+
+        # put loss into the list
+        # save model
 
 if __name__ == '__main__':
     main()
