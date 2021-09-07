@@ -11,8 +11,6 @@ from pre_processing import pre_processing
 import gensim
 from gensim import corpora
 
-
-
 # get data from the file
 def get_data():
     text_data = []
