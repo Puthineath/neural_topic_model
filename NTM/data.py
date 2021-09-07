@@ -24,6 +24,7 @@ class DataTask(Dataset):
         return dict_pos_list, dict_neg_list
 
 
+# should copy the code from the "train_ntm.py" to this Data class for data preparation
 
 data = DataTask(positive,negative)
 

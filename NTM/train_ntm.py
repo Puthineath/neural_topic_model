@@ -23,22 +23,14 @@ data = DataTask(positive,negative)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# get cost function
-def get_cost_func():
-    ntm_model = NeuralTopicModel()  # use random size of document
+def train_ntm():
+    ntm_model = NeuralTopicModel()
     w1 = ntm_model.w1
     w2 = ntm_model.w2
-#------------------------------------------load data---------------------------------------
+#------------------------------------------prepare data---------------------------------------
     d_pos_list_len = []
     single_data_pos_list = []
     single_data_neg_list = []
-
-    losses_list = []
-    losses = []
-
-    # create object for Stochastic Gradient Decent
-    optimizer = torch.optim.SGD(params =ntm_model.parameters(), lr=0.01)
-    criterion = nn.MSELoss()
 
     # get each element of positive doc
     for i in data.positive:
@@ -47,7 +39,7 @@ def get_cost_func():
             for d_pos in d_pos_list:
                 single_data_pos_list.append({g:d_pos})
 
-    # get random d_neg of negative docs based on the length of each len of positive docs
+    # get random d_neg of negative docs based on the length of each length of positive docs
     for index,j in enumerate(data.negative):
         for k in range(d_pos_list_len[index]):
             for g1,d_neg_list in j.items():
@@ -72,55 +64,55 @@ def get_cost_func():
             final_data_list[index].append(d_neg)
 
 
-    # load the data to calculate cost_function
-    cost_func_value = []
-    for elt in final_data_list:
-        word = elt[0]
-        d_pos = elt[1]
-        d_neg = elt[2]
+    # ---------------------------------------training----------------------------------------------------
+        # Stochastic Gradient Decent with values of learning rates and regularization factor mentioned in the paper
+    optimizer = torch.optim.SGD(params= ntm_model.parameters(), lr=0.01,weight_decay= 0.001)
+        # Mean Square Root metric to compute the loss
+    criterion = nn.MSELoss()
 
-        # get only the number from 'id_0' => '0'
-        d_pos = int(' '.join(re.findall("\d+", d_pos)))
-        # change dimension from 5 to 1 x 5
-        d_pos = torch.unsqueeze(w1[d_pos], 0) # get the row of matrix w1 correspond to Id number
+    epochs = 5
+    losses_list = []
 
-        if d_neg != '':
-            d_neg = int(' '.join(re.findall("\d+", d_neg)))
-            d_neg = torch.unsqueeze(w1[d_neg],0)
+    for i in range(0, epochs):
+        losses = []
 
-# --------------------------------------calculate cost function -------------------------------------
-        print(ntm_model.cost_func(word,d_pos,d_neg))
-#         cost_func_value.append(model.cost_func(word,d_pos,d_neg))
+        # for elt in final_data_list:
+        for elt in final_data_list[1:5]: # test 5 data in the list
+            word = elt[0]
+            d_pos = elt[1]
+            d_neg = elt[2]
 
-# ---------------------------------------training----------------------------------------------------
+            # get only the number from 'id_0' => '0'
+            d_pos = int(' '.join(re.findall("\d+", d_pos)))
+            # change dimension from 5 to 1 x 5
+            d_pos = torch.unsqueeze(w1[d_pos], 0) # get the row of matrix w1 correspond to Id number
 
+            if d_neg != '':
+                d_neg = int(' '.join(re.findall("\d+", d_neg)))
+                d_neg = torch.unsqueeze(w1[d_neg],0)
 
-        # optimizer.zero_grad()
-        # # to be able to add other losses, which are tensors, we initialize the loss as a 0 tensor
-        # # loss = torch.tensor(0).to(device).float()
-        # loss = torch.tensor(0).float()
+    # --------------------------------------calculate cost function and back propagate -------------------------------------
+    #         print(ntm_model.cost_func(word,d_pos,d_neg))
 
-        # if ntm_model.cost_func(word,d_pos,d_neg) > 0:
-    #         predictions = ntm_model(word, d_pos)
-    #         # I put the target value to 1 because the maximum value of probab. is 1 and then I put it at the same size of the prediction
-    #         target = torch.ones(predictions.size())
-    #         loss += criterion(predictions, target)
-    #
-    #         # once we have all the losses for one set of embeddings, we can backpropagate
-    #     loss.backward()
-    #     optimizer.step()
-    #
-    #     losses.append(loss.item())
-    #
-    # losses_list.append(mean(losses))
-    #
-    # torch.save({"state_dict": ntm_model.state_dict(), "losses": losses_list},
-    #        f"../models/train1.pth")
+            optimizer.zero_grad()
 
-    #***** Next: train the model, checking the parameters, momentum, SGD and the model again
-
+            if ntm_model.cost_func(word,d_pos,d_neg) > 0:
+                predictions = ntm_model(word, d_pos)
+                # I put the target value to 1 because I think the maximum value of probability is 1 and then I put it at the same size of the prediction
+                target = torch.ones(predictions.size())
+                loss = criterion(predictions, target)
+                loss.backward()
+                optimizer.step()
+                losses.append(loss.item())
+            else:
+                # if cost_function == 0, add 0 as value of loss
+                losses.append(0)
+        losses_list.append(mean(losses))
+    # save model
+    torch.save({"state_dict": ntm_model.state_dict(), "losses": losses_list},
+                   f'../models/ntm_model_train_{epochs}epochs.pth')
 if __name__ == '__main__':
-    print(get_cost_func())
+    print(train_ntm())
 
 
 

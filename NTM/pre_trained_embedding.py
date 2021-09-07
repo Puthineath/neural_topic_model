@@ -59,7 +59,7 @@ def save_clean_doc_id_txt(doc_dict_list):
 # check if the a word in the document or not
 # doc positive
 """
-    sample doc : {word:doc}
+    form the word and doc : {word:doc}
 """
 
 def sample_doc_positive(word):
@@ -67,12 +67,10 @@ def sample_doc_positive(word):
     for i in doc_id():
         for key, value in i.items():
             if word in value:
-                # word_in_doc_dict = {word:key}
                 word_in_doc_list.append({word:key})
 
     return word_in_doc_list
     # return word_in_doc_list,word_not_in_doc_list
-
 
 # doc negative
 def sample_doc_negative(word):
@@ -131,20 +129,20 @@ def merge_value(list_of_sample_id):
         merge_value_list.append(merge_list_of_dictionaries(dict))
     return  merge_value_list
 
-# def w2_training():
-#     shape = (1, 300)
-#     le = torch.rand(shape) # hidden layer 1 x 300
-#     shape = (1, 5)
-#     M = torch.zeros(shape)
-#     K = 5
-#     shape = (300, K)
-#     w2 = torch.rand(shape)
-#     w2_t = torch.transpose(w2, 0, 1)
-#     intermediate = le * w2
-#     le_prime = torch.sigmoid(intermediate)
-#     #le_prime = torch.sigmoid()
-#     print(le)
-#     return
+def w2_training():
+    shape = (1, 300)
+    le = torch.rand(shape) # hidden layer 1 x 300
+    shape = (1, 5)
+    M = torch.zeros(shape)
+    K = 5
+    shape = (300, K)
+    w2 = torch.rand(shape)
+    w2_t = torch.transpose(w2, 0, 1)
+    intermediate = le * w2
+    le_prime = torch.sigmoid(intermediate)
+    #le_prime = torch.sigmoid()
+    print(le)
+    return
 
 
 
@@ -160,7 +158,7 @@ def main():
     # print(f'Words do not appear in documents (d_neg):\n{list_of_sample_id_negative()}')
     # print(f'Words appear in documents (d_pos):\n{list_of_sample_id_positive()}')
     return
-#test
+
 
 if __name__ == '__main__':
     main()
